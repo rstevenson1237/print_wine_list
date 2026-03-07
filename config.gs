@@ -169,9 +169,9 @@ const BRAND_PRESETS = {
       font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic'
     },
     footer: {
-      style: 'rule',
+      style: 'ruxton',
       showRunningLabel: true,
-      runningLabelPosition: 'footer'
+      runningLabelPosition: 'header'
     },
     frontMatterPages: 2
   }
