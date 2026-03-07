@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .upload-area {
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .upload-area:hover {
+      border-color: #4285f4;
+      background-color: #f8f9fa;
+    }
+    .upload-area.dragover {
+      border-color: #4285f4;
+      background-color: #e3f2fd;
+    }
+    .upload-area.hidden {
+      display: none;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .file-label {
+      color: #4285f4;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .file-name {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #666;
+    }
+    .button-group {
+      text-align: right;
+    }
+    button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .primary {
+      background-color: #4285f4;
+      color: white;
+    }
+    .primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .primary:hover:not(:disabled) {
+      background-color: #3367d6;
+    }
+    .secondary {
+      background-color: #f1f1f1;
+      color: #333;
+    }
+    .secondary:hover {
+      background-color: #e1e1e1;
+    }
+    .status {
+      margin-top: 15px;
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+      white-space: pre-wrap;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .status.loading {
+      display: block;
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+    .status.success {
+      display: block;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status.error {
+      display: block;
+      background-color: #ffebee;
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="upload-area" id="dropZone">
+    <label class="file-label">
+      Click to select a CSV file
+      <input type="file" id="fileInput" accept=".csv">
+    </label>
+    <p style="margin-top: 10px; color: #999; font-size: 12px;">or drag and drop here</p>
+    <div class="file-name" id="fileName"></div>
+  </div>
+  
+  <div id="status" class="status"></div>
+  
+  <div class="button-group">
+    <button class="secondary" onclick="google.script.host.close()">Cancel</button>
+    <button class="primary" id="actionBtn" onclick="handleAction()" disabled>Upload</button>
+  </div>
+  
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const actionBtn = document.getElementById('actionBtn');
+    const fileName = document.getElementById('fileName');
+    const status = document.getElementById('status');
+    
+    let selectedFile = null;
+    let isComplete = false;
+    
+    fileInput.addEventListener('change', function(e) {
+      handleFile(e.target.files[0]);
+    });
+    
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.classList.remove('dragover');
+    });
+    
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFile(e.dataTransfer.files[0]);
+    });
+    
+    function handleFile(file) {
+      if (!file) return;
+      
+      if (!file.name.endsWith('.csv')) {
+        showStatus('error', 'Please select a CSV file.');
+        return;
+      }
+      
+      selectedFile = file;
+      fileName.textContent = file.name;
+      actionBtn.disabled = false;
+      status.className = 'status';
+    }
+    
+    function handleAction() {
+      if (isComplete) {
+        google.script.host.close();
+        return;
+      }
+      
+      uploadFile();
+    }
+    
+    function uploadFile() {
+      if (!selectedFile) return;
+      
+      showStatus('loading', 'Processing variance data...');
+      actionBtn.disabled = true;
+      actionBtn.textContent = 'Working...';
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        google.script.run
+          .withSuccessHandler(handleSuccess)
+          .withFailureHandler(handleError)
+          .processVarianceCSV(e.target.result);
+      };
+      reader.readAsText(selectedFile);
+    }
+    
+    function handleSuccess(result) {
+      if (result.success) {
+        showStatus('success', result.message);
+      } else {
+        showStatus('error', result.message);
+      }
+      
+      // Hide upload area, show results
+      dropZone.classList.add('hidden');
+      isComplete = true;
+      
+      // Change button to Close
+      actionBtn.disabled = false;
+      actionBtn.textContent = 'Close';
+    }
+    
+    function handleError(error) {
+      showStatus('error', 'Error: ' + error.message);
+      actionBtn.disabled = false;
+      actionBtn.textContent = 'Retry';
+    }
+    
+    function showStatus(type, message) {
+      status.className = 'status ' + type;
+      status.textContent = message;
+    }
+  </script>
+</body>
+</html>
