@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; margin: 0; padding: 12px; color: #333; }
+    h3 { margin: 16px 0 8px 0; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+
+    .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 14px; }
+    .tab { padding: 8px 16px; cursor: pointer; font-size: 13px; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab.active { color: #4285f4; border-bottom-color: #4285f4; font-weight: bold; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .config-status { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 16px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.ok  { background: #34a853; }
+    .status-dot.bad { background: #ea4335; }
+    .config-status-text { font-size: 12px; color: #555; }
+
+    .param-block { margin-bottom: 14px; }
+    .param-label { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 3px; }
+    .param-help  { font-size: 11px; color: #888; margin-bottom: 5px; }
+    .param-row   { display: flex; gap: 8px; align-items: center; }
+    .param-row input {
+      flex: 1; padding: 5px 8px; border: 1px solid #ccc; border-radius: 3px;
+      font-size: 12px; font-family: monospace; min-width: 0;
+    }
+    .param-row input.dirty { border-color: #f9a825; background: #fffde7; }
+
+    .btn { padding: 6px 14px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
+    .btn-primary { background: #4285f4; color: white; }
+    .btn-primary:hover { background: #3367d6; }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+    .btn-secondary { background: #f1f1f1; color: #333; }
+    .btn-secondary:hover { background: #e1e1e1; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .status-bar { padding: 7px 10px; border-radius: 3px; margin: 8px 0; font-size: 12px; display: none; }
+    .status-bar.success { display: block; background: #e6f4ea; color: #137333; }
+    .status-bar.error   { display: block; background: #fce8e6; color: #c5221f; }
+    .status-bar.info    { display: block; background: #e8f0fe; color: #1a73e8; }
+
+    .url-preview-toggle { font-size: 12px; color: #4285f4; cursor: pointer; user-select: none; display: inline-block; margin-top: 14px; }
+    .url-preview-box { display: none; margin-top: 6px; }
+    .url-preview-box textarea {
+      width: 100%; height: 68px; font-size: 10px; font-family: monospace;
+      padding: 6px; border: 1px solid #ccc; border-radius: 3px;
+      resize: none; color: #555; background: #fafafa; box-sizing: border-box;
+    }
+
+    /* Upload tab */
+    .upload-area {
+      border: 2px dashed #ccc; border-radius: 8px; padding: 28px 20px;
+      text-align: center; margin-bottom: 14px; transition: all 0.2s ease; cursor: pointer;
+    }
+    .upload-area:hover { border-color: #4285f4; background: #f8f9fa; }
+    .upload-area.dragover { border-color: #4285f4; background: #e3f2fd; }
+    .file-label { color: #4285f4; cursor: pointer; font-weight: bold; }
+    input[type="file"] { display: none; }
+    .file-name { margin-top: 8px; font-size: 12px; color: #666; min-height: 16px; }
+    .import-note { font-size: 12px; color: #666; margin-bottom: 14px; line-height: 1.5; }
+    .btn-group-right { text-align: right; }
+
+    hr { border: none; border-top: 1px solid #eee; margin: 16px 0; }
+  </style>
+</head>
+<body>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-btn-params" onclick="switchTab('params', this)">Connection Parameters</div>
+    <div class="tab"        id="tab-btn-import" onclick="switchTab('import', this)">Import from File</div>
+  </div>
+
+  <div id="status-bar" class="status-bar"></div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PARAMETERS TAB                                            -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div id="tab-params" class="tab-content active">
+
+    <div class="config-status" id="configStatusBar">
+      <div class="status-dot bad" id="configDot"></div>
+      <span class="config-status-text" id="configStatusText">Loading…</span>
+    </div>
+
+    <!-- User -->
+    <div class="param-block">
+      <div class="param-label">R365 Username</div>
+      <div class="param-help">The <code>User</code> parameter from your R365 report URL (e-mail address or account name).</div>
+      <div class="param-row">
+        <input type="text" id="param-user" placeholder="user@atlasrestaurantgroup.com" oninput="markDirty('user')">
+        <button class="btn btn-primary btn-sm" id="save-user" onclick="saveParam('user')">Save</button>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="param-block">
+      <div class="param-label">Location Filter ID</div>
+      <div class="param-help">The <code>Filter</code> value that identifies the restaurant location (GUID or encoded name).</div>
+      <div class="param-row">
+        <input type="text" id="param-filter" placeholder="e.g. The%20Bygone" oninput="markDirty('filter')">
+        <button class="btn btn-primary btn-sm" id="save-filter" onclick="saveParam('filter')">Save</button>
+      </div>
+    </div>
+
+    <!-- Item Category -->
+    <div class="param-block">
+      <div class="param-label">Item Category ID (Wine)</div>
+      <div class="param-help">The <code>ItemCategory1v2</code> GUID used to filter results to wine items.</div>
+      <div class="param-row">
+        <input type="text" id="param-itemCategory" placeholder="00000000-0000-0000-0000-000000000000" oninput="markDirty('itemCategory')">
+        <button class="btn btn-primary btn-sm" id="save-itemCategory" onclick="saveParam('itemCategory')">Save</button>
+      </div>
+    </div>
+
+    <!-- URL Preview -->
+    <div>
+      <span class="url-preview-toggle" id="previewToggle" onclick="toggleUrlPreview()">▶ Show URL Preview</span>
+      <div class="url-preview-box" id="urlPreviewBox">
+        <textarea id="urlPreviewText" readonly placeholder="(not yet configured)"></textarea>
+      </div>
+    </div>
+
+    <hr>
+    <div style="font-size:11px;color:#999">
+      To auto-populate all parameters, switch to the <strong>Import from File</strong> tab and upload an .atomsvc file from R365.
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- IMPORT TAB                                                -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div id="tab-import" class="tab-content">
+    <h3>Import from R365 .atomsvc File</h3>
+    <p class="import-note">
+      Export a report feed file from R365 and upload it here.
+      The Username, Location Filter, and Item Category will be extracted and saved automatically.
+    </p>
+
+    <div class="upload-area" id="dropZone">
+      <label class="file-label">
+        Click to select an .atomsvc file
+        <input type="file" id="fileInput" accept=".atomsvc" onchange="handleFileSelect(this)">
+      </label>
+      <p style="margin-top:10px;color:#999;font-size:12px;">or drag and drop here</p>
+      <div class="file-name" id="fileName"></div>
+    </div>
+
+    <div class="btn-group-right">
+      <button class="btn btn-secondary" onclick="google.script.host.close()">Cancel</button>
+      <button class="btn btn-primary" id="uploadBtn" onclick="uploadFile()" disabled
+              style="margin-left:8px;">Import</button>
+    </div>
+  </div>
+
+<script>
+  // Maps field IDs to DocumentProperties keys (must match r365.gs R365_DOC_PROPS)
+  var PARAM_KEYS = {
+    user:         'R365_USER',
+    filter:       'R365_FILTER',
+    itemCategory: 'R365_ITEM_CATEGORY'
+  };
+
+  var selectedFile   = null;
+  var previewVisible = false;
+
+  // ──────────────────────────────────────────────
+  // Tab switching
+  // ──────────────────────────────────────────────
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    clearStatus();
+  }
+
+  // ──────────────────────────────────────────────
+  // Initialise — load current config from server
+  // ──────────────────────────────────────────────
+  google.script.run
+    .withSuccessHandler(populateFields)
+    .withFailureHandler(showError)
+    .getR365Config();
+
+  function populateFields(config) {
+    document.getElementById('param-user').value         = config.user         || '';
+    document.getElementById('param-filter').value       = config.filter       || '';
+    document.getElementById('param-itemCategory').value = config.itemCategory || '';
+
+    var dot  = document.getElementById('configDot');
+    var text = document.getElementById('configStatusText');
+    if (config.hasConfig) {
+      dot.className  = 'status-dot ok';
+      text.textContent = 'R365 connection is configured.';
+    } else {
+      dot.className  = 'status-dot bad';
+      text.textContent = 'Not configured — import an .atomsvc file or enter parameters manually.';
+    }
+
+    refreshPreviewIfOpen();
+  }
+
+  // ──────────────────────────────────────────────
+  // Dirty-state indicator on inputs
+  // ──────────────────────────────────────────────
+  function markDirty(field) {
+    document.getElementById('param-' + field).classList.add('dirty');
+  }
+
+  // ──────────────────────────────────────────────
+  // Save a single parameter
+  // ──────────────────────────────────────────────
+  function saveParam(field) {
+    var input  = document.getElementById('param-' + field);
+    var btn    = document.getElementById('save-' + field);
+    var value  = input.value.trim();
+    var key    = PARAM_KEYS[field];
+
+    btn.disabled    = true;
+    btn.textContent = '…';
+
+    google.script.run
+      .withSuccessHandler(function(r) {
+        btn.disabled    = false;
+        btn.textContent = 'Save';
+        input.classList.remove('dirty');
+        showStatus(r.success ? 'success' : 'error', r.message);
+        if (r.success) {
+          // Refresh status bar and URL preview
+          google.script.run.withSuccessHandler(populateFields).getR365Config();
+        }
+      })
+      .withFailureHandler(function(e) {
+        btn.disabled    = false;
+        btn.textContent = 'Save';
+        showError(e);
+      })
+      .saveR365Param(key, value);
+  }
+
+  // ──────────────────────────────────────────────
+  // URL Preview
+  // ──────────────────────────────────────────────
+  function toggleUrlPreview() {
+    previewVisible = !previewVisible;
+    document.getElementById('urlPreviewBox').style.display = previewVisible ? 'block' : 'none';
+    document.getElementById('previewToggle').textContent   =
+      (previewVisible ? '▼' : '▶') + ' Show URL Preview';
+    if (previewVisible) refreshPreviewIfOpen();
+  }
+
+  function refreshPreviewIfOpen() {
+    if (!previewVisible) return;
+    google.script.run
+      .withSuccessHandler(function(url) {
+        document.getElementById('urlPreviewText').value = url || '(not yet configured)';
+      })
+      .getR365UrlPreview();
+  }
+
+  // ──────────────────────────────────────────────
+  // File upload (Import tab)
+  // ──────────────────────────────────────────────
+  var dropZone = document.getElementById('dropZone');
+
+  dropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', function() {
+    dropZone.classList.remove('dragover');
+  });
+  dropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFileSelect(input) {
+    if (input.files.length) handleFile(input.files[0]);
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.atomsvc')) {
+      showStatus('error', 'Please select a file with the .atomsvc extension.');
+      return;
+    }
+    selectedFile = file;
+    document.getElementById('fileName').textContent  = file.name;
+    document.getElementById('uploadBtn').disabled    = false;
+    clearStatus();
+  }
+
+  function uploadFile() {
+    if (!selectedFile) return;
+
+    var btn = document.getElementById('uploadBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Working…';
+    showStatus('info', 'Reading and processing feed file…');
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled    = false;
+          btn.textContent = 'Import';
+
+          if (r.success) {
+            showStatus('success', r.message);
+            // Populate fields with the newly-extracted values
+            if (r.config) {
+              document.getElementById('param-user').value         = r.config.user         || '';
+              document.getElementById('param-filter').value       = r.config.filter       || '';
+              document.getElementById('param-itemCategory').value = r.config.itemCategory || '';
+            }
+            // Switch to Parameters tab so the user can verify
+            switchTab('params', document.getElementById('tab-btn-params'));
+            google.script.run.withSuccessHandler(populateFields).getR365Config();
+          } else {
+            showStatus('error', r.message);
+          }
+        })
+        .withFailureHandler(function(e) {
+          btn.disabled    = false;
+          btn.textContent = 'Import';
+          showError(e);
+        })
+        .processUploadedFeed(e.target.result);
+    };
+    reader.readAsText(selectedFile);
+  }
+
+  // ──────────────────────────────────────────────
+  // Status helpers
+  // ──────────────────────────────────────────────
+  function showStatus(type, message) {
+    var el = document.getElementById('status-bar');
+    el.className   = 'status-bar ' + type;
+    el.textContent = message;
+    if (type === 'success') {
+      setTimeout(function() {
+        if (el.classList.contains('success')) el.style.display = 'none';
+      }, 3500);
+    }
+  }
+
+  function clearStatus() {
+    var el = document.getElementById('status-bar');
+    el.className   = 'status-bar';
+    el.textContent = '';
+  }
+
+  function showError(e) {
+    showStatus('error', 'Error: ' + (e.message || String(e)));
+  }
+</script>
+</body>
+</html>
