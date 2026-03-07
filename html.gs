@@ -34,7 +34,6 @@ function generateHTML(sections, wineMap, pagination, assets, brand) {
 // ============================================================================
 // HTML Head — Styles + Font Faces
 // ============================================================================
-
 function generateHTMLHead(assets, brand) {
   var pc   = brand.pageConfig;
   var col  = brand.colors;
@@ -59,7 +58,7 @@ function generateHTMLHead(assets, brand) {
     var ts = hs[t].title;
     var ss = hs[t].subtext;
     var titleFont = ts.font.replace(/\.[^.]+$/, '');
-    var subFont = ss.font.replace(/\.[^.]+$/, '');
+    var subFont   = ss.font.replace(/\.[^.]+$/, '');
 
     headingCSS += '\n        .heading-type-' + t + ' {\n' +
       '            font-family: \'' + titleFont + '\', \'Georgia\', serif;\n' +
@@ -143,7 +142,46 @@ function generateHTMLHead(assets, brand) {
       '                width: 100%;\n' +
       '            }\n' +
       '        }';
+
+  } else if (foot.style === 'ruxton') {
+    // Double bar spanning full page width with page number + SVG icon on the outer edge.
+    // All three @bottom-* boxes are declared on each page side so the border-top runs
+    // continuously across the full content width. The outer box (right on recto pages,
+    // left on verso pages) carries the page number and icon; the other two carry only
+    // the bar border with empty content.
+    // Note: ensure the uploaded footer file is an SVG with explicit width/height
+    // attributes so Chrome renders it at the intended size in the margin box.
+    var ruxtonBar  = 'border-top: 3px double ' + col.primary + '; padding-top: 5px;';
+    var ruxtonText = 'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
+                     'font-size: 9px; color: ' + col.primary + '; ' +
+                     'letter-spacing: 1px; vertical-align: top;';
+
+    footerCSS =
+      // Recto (right / odd) pages — number | icon on the right
+      '\n        @page main-pages:right {\n' +
+      '            @bottom-left   { content: ""; ' + ruxtonBar + ' }\n' +
+      '            @bottom-center { content: ""; ' + ruxtonBar + ' }\n' +
+      '            @bottom-right  {\n' +
+      '                content: counter(page) " | " url(\'' + assets.footerImageUri + '\');\n' +
+      '                ' + ruxtonBar + '\n' +
+      '                ' + ruxtonText + '\n' +
+      '                text-align: right;\n' +
+      '            }\n' +
+      '        }\n' +
+      // Verso (left / even) pages — icon | number on the left
+      '        @page main-pages:left {\n' +
+      '            @bottom-left   {\n' +
+      '                content: url(\'' + assets.footerImageUri + '\') " | " counter(page);\n' +
+      '                ' + ruxtonBar + '\n' +
+      '                ' + ruxtonText + '\n' +
+      '                text-align: left;\n' +
+      '            }\n' +
+      '            @bottom-center { content: ""; ' + ruxtonBar + ' }\n' +
+      '            @bottom-right  { content: ""; ' + ruxtonBar + ' }\n' +
+      '        }';
+
   } else {
+    // 'rule' — thin centred line with page number
     footerCSS = '\n        @page main-pages {\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
