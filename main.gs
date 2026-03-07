@@ -22,6 +22,8 @@ function onOpen() {
     .addItem('Update Purchases', 'showPurchaseDateDialog')
     .addItem('Upload Variance Data (.csv)', 'showVarianceUploadDialog')
     .addSeparator()
+    .addItem('Sync Section Codes', 'syncSectionCodes')
+    .addSeparator()
     .addItem('Update Report Feed', 'showFeedUploadDialog')
     .addToUi();
 }
