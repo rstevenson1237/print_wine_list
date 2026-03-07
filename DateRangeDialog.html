@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="date"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .button-group {
+      margin-top: 20px;
+      text-align: right;
+    }
+    button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .primary {
+      background-color: #4285f4;
+      color: white;
+    }
+    .primary:hover {
+      background-color: #3367d6;
+    }
+    .primary:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .secondary {
+      background-color: #f1f1f1;
+      color: #333;
+    }
+    .secondary:hover {
+      background-color: #e1e1e1;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+      white-space: pre-wrap;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .status.loading {
+      display: block;
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+    .status.success {
+      display: block;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status.error {
+      display: block;
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    .form-content.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="formContent" class="form-content">
+    <div class="form-group">
+      <label for="startDate">Start Date</label>
+      <input type="date" id="startDate" value="<?= defaultStart ?>">
+    </div>
+    
+    <div class="form-group">
+      <label for="endDate">End Date</label>
+      <input type="date" id="endDate" value="<?= defaultEnd ?>">
+    </div>
+  </div>
+  
+  <div id="status" class="status"></div>
+  
+  <div class="button-group">
+    <button class="secondary" onclick="google.script.host.close()">Cancel</button>
+    <button class="primary" id="actionBtn" onclick="runUpdate()">Update Purchases</button>
+  </div>
+  
+  <script>
+    const formContent = document.getElementById('formContent');
+    const status = document.getElementById('status');
+    const actionBtn = document.getElementById('actionBtn');
+    let isComplete = false;
+    
+    function runUpdate() {
+      // If already complete, close the dialog
+      if (isComplete) {
+        google.script.host.close();
+        return;
+      }
+      
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      
+      if (!startDate || !endDate) {
+        showStatus('error', 'Please select both start and end dates.');
+        return;
+      }
+      
+      if (new Date(startDate) > new Date(endDate)) {
+        showStatus('error', 'Start date must be before end date.');
+        return;
+      }
+      
+      // Show loading state
+      showStatus('loading', 'Fetching data from R365...');
+      actionBtn.disabled = true;
+      actionBtn.textContent = 'Working...';
+      
+      google.script.run
+        .withSuccessHandler(handleSuccess)
+        .withFailureHandler(handleError)
+        .processDatesAndRunUpdate(startDate, endDate);
+    }
+    
+    function handleSuccess(result) {
+      if (result.success) {
+        showStatus('success', result.message);
+      } else {
+        showStatus('error', result.message);
+      }
+      
+      // Hide form, show results
+      formContent.classList.add('hidden');
+      isComplete = true;
+      
+      // Change button to Close
+      actionBtn.disabled = false;
+      actionBtn.textContent = 'Close';
+    }
+    
+    function handleError(error) {
+      showStatus('error', 'Error: ' + error.message);
+      actionBtn.disabled = false;
+      actionBtn.textContent = 'Retry';
+    }
+    
+    function showStatus(type, message) {
+      status.className = 'status ' + type;
+      status.textContent = message;
+    }
+  </script>
+</body>
+</html>
