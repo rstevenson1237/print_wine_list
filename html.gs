@@ -74,7 +74,6 @@ function generateHTMLHead(assets, brand) {
       '            scroll-margin-top: 20px;\n' +
       '        }';
 
-    // Underline rules
     if (ts.underline === 'partial') {
       headingCSS += '\n        .heading-type-' + t + '::after {\n' +
         '            content: \'\';\n' +
@@ -104,7 +103,6 @@ function generateHTMLHead(assets, brand) {
         '        .heading-type-' + t + ' { position: relative; }';
     }
 
-    // Subtext styles
     headingCSS += '\n        .subtext-type-' + t + ' {\n' +
       '            font-family: \'' + subFont + '\', \'Georgia\', serif;\n' +
       '            font-size: ' + ss.size + 'px;\n' +
@@ -121,13 +119,11 @@ function generateHTMLHead(assets, brand) {
     headingCSS += '        }';
   }
 
-  // --- Wine entry font ---
   var wineFont = we.font.replace(/\.[^.]+$/, '');
 
-  // --- Footer CSS based on style ---
+  // --- Footer CSS ---
   var footerCSS = '';
   if (foot.style === 'image') {
-    // Decorative image footer (Bygone style)
     footerCSS = '\n        @page main-pages {\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
@@ -148,7 +144,6 @@ function generateHTMLHead(assets, brand) {
       '            }\n' +
       '        }';
   } else {
-    // Rule-based footer (Ruxton style)
     footerCSS = '\n        @page main-pages {\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
@@ -167,7 +162,6 @@ function generateHTMLHead(assets, brand) {
   var runningLabelCSS = '';
   if (foot.showRunningLabel) {
     if (foot.runningLabelPosition === 'header') {
-      // Top outer corner label
       runningLabelCSS = '\n        .running-label {\n' +
         '            font-family: \'' + wineFont + '\', \'Georgia\', serif;\n' +
         '            font-size: 9px;\n' +
@@ -179,7 +173,6 @@ function generateHTMLHead(assets, brand) {
         '        .running-label-left { text-align: left; }\n' +
         '        .running-label-right { text-align: right; }';
     } else {
-      // Bottom alongside page number — handled via the running-label div
       runningLabelCSS = '\n        .running-label {\n' +
         '            font-family: \'' + wineFont + '\', \'Georgia\', serif;\n' +
         '            font-size: 9px;\n' +
@@ -193,8 +186,6 @@ function generateHTMLHead(assets, brand) {
         '        .running-label-right { text-align: right; }';
     }
   }
-
-  // === Assemble full <head> ===
 
   return '<!DOCTYPE html>\n<html lang="en">\n<head>\n' +
     '    <meta charset="UTF-8">\n' +
@@ -238,7 +229,6 @@ function generateHTMLHead(assets, brand) {
     '            min-height: 90vh;\n' +
     '            text-align: center;\n' +
     '            page-break-after: always;\n' +
-    '            page: title-page;\n' +
     '        }\n' +
     '        .logo { max-width: 200px; margin-bottom: 40px; }\n' +
     '        .welcome-text {\n' +
@@ -264,7 +254,6 @@ function generateHTMLHead(assets, brand) {
     '        /* TOC Page */\n' +
     '        .toc-page {\n' +
     '            page-break-after: always;\n' +
-    '            page: toc-page;\n' +
     '            padding-top: 40px;\n' +
     '        }\n' +
     '        .toc-page h2 {\n' +
@@ -284,8 +273,7 @@ function generateHTMLHead(assets, brand) {
     '        .toc-page-number { margin-left: 8px; }\n' +
     '        .toc-type-1 { font-weight: bold; font-size: 14px; margin-top: 12px; }\n' +
     '        .toc-type-2 { font-size: 12px; padding-left: 15px; margin-top: 4px; }\n' +
-    '        .toc-type-3 { font-size: 11px; padding-left: 30px; margin-top: 2px; }\n' +
-    '        .toc-type-4 { font-size: 10px; padding-left: 45px; margin-top: 2px; }\n\n' +
+    '        .toc-type-3 { font-size: 11px; padding-left: 30px; margin-top: 2px; }\n\n' +
     '        /* Heading Styles (per type) */' + headingCSS + '\n\n' +
     '        /* Wine Entries */\n' +
     '        .wine-entry {\n' +
@@ -329,17 +317,17 @@ function generateHTMLHead(assets, brand) {
 
 function generateTitlePage(logoImageUri, brand) {
   var w = brand.welcome;
-  var html = '\n        <header>\n' +
-    '            <div class="title-page">\n' +
-    '                <img src="' + logoImageUri + '" alt="Logo" class="logo">\n';
 
-  // Only add welcome text if at least line1 has content
+  var html = '\n        <div class="title-page">\n' +
+    '            <img src="' + logoImageUri + '" alt="Logo" class="logo">\n';
+
+  // Only add welcome text if at least one line has content
   if (w.line1 || w.line2 || w.line3) {
-    html += '                <div class="welcome-text">\n';
-    if (w.line1) html += '                    <p>' + escapeHtml(w.line1) + '</p>\n';
-    if (w.line2) html += '                    <p>' + escapeHtml(w.line2) + '</p>\n';
-    if (w.line3) html += '                    <p>' + escapeHtml(w.line3) + '</p>\n';
-    html += '                </div>\n';
+    html += '            <div class="welcome-text">\n';
+    if (w.line1) html += '                <p>' + escapeHtml(w.line1) + '</p>\n';
+    if (w.line2) html += '                <p>' + escapeHtml(w.line2) + '</p>\n';
+    if (w.line3) html += '                <p>' + escapeHtml(w.line3) + '</p>\n';
+    html += '            </div>\n';
   }
 
   // Auto-date
@@ -347,10 +335,10 @@ function generateTitlePage(logoImageUri, brand) {
     var now = new Date();
     var timeZone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
     var dateStr = Utilities.formatDate(now, timeZone, 'MM.dd.yy');
-    html += '                <div class="title-date">' + dateStr + '</div>\n';
+    html += '            <div class="title-date">' + dateStr + '</div>\n';
   }
 
-  html += '            </div>';
+  html += '        </div>';
   return html;
 }
 
@@ -359,19 +347,20 @@ function generateTitlePage(logoImageUri, brand) {
 // ============================================================================
 
 function generateTOCPage(tocData, brand) {
-  var html = '\n            <div class="toc-page">\n' +
-    '                <h2>Table of Contents</h2>\n' +
-    '                <div class="toc-list">';
+  var html = '\n        <div class="toc-page">\n' +
+    '            <h2>Table of Contents</h2>\n' +
+    '            <div class="toc-list">';
 
   tocData.forEach(function(entry) {
-    var pageNum = entry.pageNumber ? '<span class="toc-page-number">' + entry.pageNumber + '</span>' : '';
-    html += '\n                    <div class="toc-type-' + entry.type + '">' +
+    var pageNum = entry.pageNumber
+      ? '<span class="toc-page-number">' + entry.pageNumber + '</span>'
+      : '';
+    html += '\n                <div class="toc-type-' + entry.type + '">' +
       '<a href="#' + entry.slug + '">' + escapeHtml(entry.title) + pageNum + '</a></div>';
   });
 
-  html += '\n                </div>\n' +
-    '            </div>\n' +
-    '        </header>';
+  html += '\n            </div>\n' +
+    '        </div>';
   return html;
 }
 
