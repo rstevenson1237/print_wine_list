@@ -54,14 +54,14 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig) {
     var fitsOnEmptyPage   = totalHeight <= usableHeight;
 
     if (fitsOnCurrentPage) {
-      recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers);
+      recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
 
     } else if (currentHeight > 0 && fitsOnEmptyPage) {
       pageBreaks.add(s);
       currentPage++;
       currentHeight = 0;
-      recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers);
+      recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
 
     } else {
@@ -71,7 +71,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig) {
         currentHeight = 0;
       }
 
-      recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers);
+      recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
 
       if (wines.length === 0) {
         currentHeight = headingHeight;
@@ -105,13 +105,18 @@ function buildTOCData(sections, tocPageNumbers) {
   var tocData = [];
   for (var i = 0; i < sections.length; i++) {
     var section = sections[i];
-    var key = section.type + ':' + section.title;
+
+    // Only include Types 1–3 in the TOC
+    if (section.type > 3) continue;
+
+    var key        = i + ':' + section.type + ':' + section.title;
     var pageNumber = tocPageNumbers.get(key) || '';
+
     tocData.push({
-      type: section.type,
-      title: section.title,
+      type:       section.type,
+      title:      section.title,
       pageNumber: pageNumber,
-      slug: createSlug('section-' + section.type + '-' + section.title)
+      slug:       createSlug('section-' + section.type + '-' + section.title)
     });
   }
   return tocData;
@@ -133,11 +138,22 @@ function estimateHeadingHeight(typeLevel, subtext, headingStyles) {
   return titleHeight + subtextHeight;
 }
 
-function recordTOCEntry_(section, displayPage, tocMap) {
-  var key = section.type + ':' + section.title;
-  if (!tocMap.has(key)) {
-    tocMap.set(key, displayPage);
-  }
+/**
+ * Records a section's page number in the TOC map.
+ * Uses the section index as part of the key so that sections sharing the same
+ * type and title (e.g., "SPAIN" appearing under multiple parent groups) each
+ * receive their own correct page number rather than inheriting the first
+ * occurrence's page.
+ *
+ * @param {Object} section       The section object.
+ * @param {number} displayPage   The display page number (content page + front matter offset).
+ * @param {Map}    tocMap        The TOC page-number map being built.
+ * @param {number} sectionIndex  The section's index in the sections array.
+ * @private
+ */
+function recordTOCEntry_(section, displayPage, tocMap, sectionIndex) {
+  var key = sectionIndex + ':' + section.type + ':' + section.title;
+  tocMap.set(key, displayPage);
 }
 
 function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage) {
