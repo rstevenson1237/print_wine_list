@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; margin: 0; padding: 12px; color: #333; }
+    h3 { margin: 18px 0 8px 0; font-size: 15px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    h4 { margin: 10px 0 6px 0; font-size: 13px; color: #555; }
+
+    .section { margin-bottom: 16px; }
+    .row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+    .row label { min-width: 80px; font-size: 12px; color: #666; }
+    .row select, .row input[type="number"], .row input[type="text"] {
+      padding: 3px 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px;
+    }
+    .row select { max-width: 220px; }
+    .row input[type="number"] { width: 65px; }
+    .row input[type="color"] { width: 32px; height: 26px; padding: 0; border: 1px solid #ccc; cursor: pointer; }
+    .row input[type="text"].hex { width: 75px; }
+
+    .type-panel { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+    .type-panel-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #222; }
+    .sub-group { margin-left: 10px; padding-left: 10px; border-left: 2px solid #ddd; margin-bottom: 6px; }
+    .sub-group-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+
+    textarea { width: 100%; height: 50px; padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; resize: vertical; }
+
+    .btn { padding: 6px 14px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
+    .btn-primary { background: #4285f4; color: white; }
+    .btn-primary:hover { background: #3367d6; }
+    .btn-danger { background: #ea4335; color: white; }
+    .btn-danger:hover { background: #c5221f; }
+    .btn-warning { background: #f9ab00; color: white; }
+    .btn-warning:hover { background: #e69500; }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    .file-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+    .file-row .filename { font-size: 12px; color: #555; flex: 1; }
+    .file-row input[type="file"] { display: none; }
+
+    .status { padding: 6px 10px; border-radius: 3px; margin: 8px 0; font-size: 12px; display: none; }
+    .status.success { display: block; background: #e6f4ea; color: #137333; }
+    .status.error { display: block; background: #fce8e6; color: #c5221f; }
+
+    .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 12px; flex-wrap: wrap; }
+    .tab { padding: 8px 14px; cursor: pointer; font-size: 12px; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+    .tab.active { color: #4285f4; border-bottom-color: #4285f4; font-weight: bold; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .brand-bar { background: #f0f4ff; border: 1px solid #c8d6f0; border-radius: 4px; padding: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .brand-bar label { font-weight: bold; font-size: 13px; color: #333; }
+    .brand-bar select { font-size: 13px; padding: 4px 8px; }
+
+    .checkbox-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .checkbox-row input[type="checkbox"] { margin: 0; }
+    .checkbox-row label { font-size: 12px; color: #666; min-width: auto; }
+
+    .help-text { font-size: 11px; color: #999; margin-top: 2px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- Brand Preset Bar -->
+  <div class="brand-bar">
+    <label>Brand Preset:</label>
+    <select id="brand-select"></select>
+    <button class="btn btn-warning btn-sm" onclick="loadPreset()">Load Preset</button>
+    <span style="font-size:11px;color:#888">(Overwrites all settings)</span>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('page')">Page Layout</div>
+    <div class="tab" onclick="switchTab('headings')">Heading Styles</div>
+    <div class="tab" onclick="switchTab('wine')">Wine Entry</div>
+    <div class="tab" onclick="switchTab('brand')">Brand / Images</div>
+    <div class="tab" onclick="switchTab('welcome')">Title Page</div>
+    <div class="tab" onclick="switchTab('footer')">Footer</div>
+    <div class="tab" onclick="switchTab('fonts')">Fonts</div>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <!-- ======== PAGE LAYOUT TAB ======== -->
+  <div id="tab-page" class="tab-content active">
+    <h3>Page Dimensions</h3>
+    <div class="row">
+      <label>Size Preset</label>
+      <select id="page-size-preset" onchange="applyPageSizePreset()"></select>
+    </div>
+    <div class="row">
+      <label>Width (in)</label><input type="number" id="page-width" min="4" max="14" step="0.25">
+      <label>Height (in)</label><input type="number" id="page-height" min="4" max="18" step="0.25">
+    </div>
+
+    <h3>Margins (inches)</h3>
+    <div class="help-text">Inner margin = gutter (binding side). Outer margin = far edge. All lists use book-spread (alternating) layout.</div>
+    <div class="row">
+      <label>Top</label><input type="number" id="page-margin-top" min="0.25" max="2" step="0.05">
+      <label>Bottom</label><input type="number" id="page-margin-bottom" min="0.25" max="2" step="0.05">
+    </div>
+    <div class="row">
+      <label>Inner</label><input type="number" id="page-margin-inner" min="0.25" max="2" step="0.05">
+      <label>Outer</label><input type="number" id="page-margin-outer" min="0.25" max="2" step="0.05">
+    </div>
+
+    <h3>Pagination</h3>
+    <div class="row">
+      <label>Page Buffer (pt)</label><input type="number" id="page-buffer" min="20" max="200" step="5">
+    </div>
+    <div class="help-text">Reduces usable page height by this many points. Increase to add more bottom breathing room before a page break.</div>
+    <div class="row">
+      <label>Front Matter Pages</label><input type="number" id="front-matter-pages" min="0" max="10" step="1">
+    </div>
+    <div class="help-text">Number of pages before content starts (title + TOC). Affects page numbering offset.</div>
+
+    <div style="margin-top:12px"><button class="btn btn-primary" onclick="savePageLayout()">Save Page Layout</button></div>
+  </div>
+
+  <!-- ======== HEADINGS TAB ======== -->
+  <div id="tab-headings" class="tab-content">
+    <div id="heading-panels"></div>
+  </div>
+
+  <!-- ======== WINE ENTRY TAB ======== -->
+  <div id="tab-wine" class="tab-content">
+    <h3>Wine Entry Style</h3>
+    <div class="row">
+      <label>Font</label><select id="wine-font"></select>
+      <label>Size</label><input type="number" id="wine-size" min="8" max="24">
+    </div>
+    <div class="row">
+      <label>Color</label>
+      <input type="color" id="wine-color-pick">
+      <input type="text" id="wine-color-hex" class="hex" maxlength="7">
+      <label>Weight</label>
+      <select id="wine-weight"><option value="normal">Normal</option><option value="bold">Bold</option></select>
+      <label>Style</label>
+      <select id="wine-style"><option value="normal">Normal</option><option value="italic">Italic</option></select>
+    </div>
+    <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveWineEntry()">Save Wine Entry Style</button></div>
+  </div>
+
+  <!-- ======== BRAND TAB ======== -->
+  <div id="tab-brand" class="tab-content">
+    <h3>Brand Colors</h3>
+    <div class="row">
+      <label>Primary</label>
+      <input type="color" id="color-primary-pick" onchange="syncColor('primary')">
+      <input type="text" id="color-primary-hex" class="hex" maxlength="7" onchange="syncColorFromHex('primary')">
+      <button class="btn btn-sm btn-primary" onclick="saveColorSetting('primary')">Save</button>
+    </div>
+    <div class="row">
+      <label>Text</label>
+      <input type="color" id="color-text-pick" onchange="syncColor('text')">
+      <input type="text" id="color-text-hex" class="hex" maxlength="7" onchange="syncColorFromHex('text')">
+      <button class="btn btn-sm btn-primary" onclick="saveColorSetting('text')">Save</button>
+    </div>
+
+    <h3>Images</h3>
+    <div class="file-row">
+      <label>Logo</label>
+      <span class="filename" id="img-logo-name">—</span>
+      <button class="btn btn-sm btn-primary" onclick="document.getElementById('img-logo-file').click()">Change</button>
+      <input type="file" id="img-logo-file" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadImage('logo', this)">
+    </div>
+    <div class="file-row">
+      <label>Footer</label>
+      <span class="filename" id="img-footer-name">—</span>
+      <button class="btn btn-sm btn-primary" onclick="document.getElementById('img-footer-file').click()">Change</button>
+      <input type="file" id="img-footer-file" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadImage('footer', this)">
+    </div>
+  </div>
+
+  <!-- ======== TITLE PAGE TAB ======== -->
+  <div id="tab-welcome" class="tab-content">
+    <h3>Title Page</h3>
+    <div class="checkbox-row">
+      <input type="checkbox" id="show-title-page">
+      <label for="show-title-page">Show title page</label>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="show-date">
+      <label for="show-date">Show auto-generated date</label>
+    </div>
+    <div style="margin-top:6px"><button class="btn btn-sm btn-primary" onclick="saveWelcomeToggles()">Save Toggles</button></div>
+
+    <h3>Welcome Text</h3>
+    <div class="help-text">Leave blank for a logo-only title page. Line 1 uses the Type 1 heading font and brand color.</div>
+    <h4>Line 1 (headline)</h4>
+    <textarea id="welcome-line1"></textarea>
+    <h4>Line 2</h4>
+    <textarea id="welcome-line2"></textarea>
+    <h4>Line 3</h4>
+    <textarea id="welcome-line3"></textarea>
+    <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveWelcome()">Save Welcome Text</button></div>
+  </div>
+
+  <!-- ======== FOOTER TAB ======== -->
+  <div id="tab-footer" class="tab-content">
+    <h3>Footer Style</h3>
+    <div class="row">
+      <label>Style</label>
+      <select id="footer-style">
+        <option value="image">Decorative Image</option>
+        <option value="rule">Thin Rule</option>
+      </select>
+    </div>
+    <div class="help-text">"Decorative Image" uses the footer image file as a full-width decorative border. "Thin Rule" draws a simple line with the page number.</div>
+
+    <h3>Running Section Label</h3>
+    <div class="checkbox-row">
+      <input type="checkbox" id="show-running-label">
+      <label for="show-running-label">Show current section label on each page</label>
+    </div>
+    <div class="row">
+      <label>Position</label>
+      <select id="running-label-position">
+        <option value="header">Top of page (outer corner)</option>
+        <option value="footer">Bottom of page</option>
+      </select>
+    </div>
+    <div class="help-text">The label shows the current top-level section name (e.g., "SPARKLING", "WHITE", "RED") and alternates left/right for spread printing.</div>
+
+    <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveFooter()">Save Footer Settings</button></div>
+  </div>
+
+  <!-- ======== FONTS TAB ======== -->
+  <div id="tab-fonts" class="tab-content">
+    <h3>Font Library</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:10px;">
+      Upload font files here. They become available in the font dropdowns for heading and wine entry styles.
+    </p>
+    <div id="font-pool-list"></div>
+    <div style="margin-top:10px">
+      <button class="btn btn-primary" onclick="document.getElementById('font-upload-file').click()">Upload Font</button>
+      <input type="file" id="font-upload-file" accept=".otf,.ttf,.woff,.woff2" onchange="uploadFont(this)" style="display:none">
+    </div>
+  </div>
+
+  <hr style="margin-top:20px">
+  <div style="text-align:right; margin-top:8px;">
+    <button class="btn btn-danger" onclick="resetAll()">Reset All to Brand Defaults</button>
+  </div>
+
+<script>
+  var fontPool = [];
+  var typeNames = { 1: 'Type 1 — STYLE', 2: 'Type 2 — COUNTRY', 3: 'Type 3 — REGION', 4: 'Type 4 — APPELLATION' };
+  var alignOptions = ['left', 'center', 'right'];
+  var weightOptions = ['normal', 'bold'];
+  var transformOptions = ['none', 'uppercase', 'lowercase'];
+  var underlineOptions = ['none', 'text', 'partial', 'full'];
+  var subtextPosOptions = ['below', 'inline'];
+
+  // ======== TAB SWITCHING ========
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    event.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  // ======== INITIALIZATION ========
+  google.script.run.withSuccessHandler(initSettings).getAllSettings();
+
+  function initSettings(settings) {
+    fontPool = settings.fontPool || [];
+
+    // Brand dropdown
+    var brandSel = document.getElementById('brand-select');
+    brandSel.innerHTML = (settings.brandPresets || []).map(function(b) {
+      var sel = (b === settings.brandName) ? ' selected' : '';
+      return '<option value="' + b + '"' + sel + '>' + b + '</option>';
+    }).join('');
+
+    // Page size preset dropdown
+    var sizeSel = document.getElementById('page-size-preset');
+    sizeSel.innerHTML = (settings.pageSizes || []).map(function(s) {
+      var sel = (s === settings.pageSettings.sizePreset) ? ' selected' : '';
+      return '<option value="' + s + '"' + sel + '>' + s + '</option>';
+    }).join('');
+
+    renderPageSettings(settings.pageSettings);
+    renderHeadingPanels(settings.headingStyles);
+    renderWineEntry(settings.wineEntry);
+    renderColors(settings.colors);
+    renderImages(settings.images);
+    renderWelcome(settings.welcome);
+    renderFooter(settings.footer);
+    renderFontPool();
+  }
+
+  // ======== BRAND PRESET ========
+  function loadPreset() {
+    var brand = document.getElementById('brand-select').value;
+    if (!confirm('Load the "' + brand + '" preset? This will overwrite ALL current settings.')) return;
+    google.script.run
+      .withSuccessHandler(function(r) {
+        showStatus(r.success ? 'success' : 'error', r.message);
+        if (r.success) {
+          google.script.run.withSuccessHandler(initSettings).getAllSettings();
+        }
+      })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .loadBrandPreset(brand);
+  }
+
+  // ======== PAGE LAYOUT ========
+  function renderPageSettings(pg) {
+    document.getElementById('page-width').value = pg.width;
+    document.getElementById('page-height').value = pg.height;
+    document.getElementById('page-margin-top').value = pg.marginTop;
+    document.getElementById('page-margin-bottom').value = pg.marginBottom;
+    document.getElementById('page-margin-inner').value = pg.marginInner;
+    document.getElementById('page-margin-outer').value = pg.marginOuter;
+    document.getElementById('page-buffer').value = pg.pageBuffer;
+    document.getElementById('front-matter-pages').value = pg.frontMatterPages;
+  }
+
+  function applyPageSizePreset() {
+    var label = document.getElementById('page-size-preset').value;
+    // Parse dimensions from label: e.g., "US Letter (8.5 × 11)"
+    var match = label.match(/([\d.]+)\s*[×x]\s*([\d.]+)/);
+    if (match) {
+      document.getElementById('page-width').value = parseFloat(match[1]);
+      document.getElementById('page-height').value = parseFloat(match[2]);
+    }
+  }
+
+  function savePageLayout() {
+    var obj = {
+      sizePreset:      document.getElementById('page-size-preset').value,
+      width:           parseFloat(val('page-width')),
+      height:          parseFloat(val('page-height')),
+      marginTop:       parseFloat(val('page-margin-top')),
+      marginBottom:    parseFloat(val('page-margin-bottom')),
+      marginInner:     parseFloat(val('page-margin-inner')),
+      marginOuter:     parseFloat(val('page-margin-outer')),
+      pageBuffer:      parseInt(val('page-buffer')),
+      frontMatterPages: parseInt(val('front-matter-pages'))
+    };
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .savePageSettings(obj);
+  }
+
+  // ======== HEADING PANELS ========
+  function renderHeadingPanels(styles) {
+    var container = document.getElementById('heading-panels');
+    container.innerHTML = '';
+    for (var t = 1; t <= 4; t++) {
+      var s = styles[t];
+      var panel = document.createElement('div');
+      panel.className = 'type-panel';
+      panel.innerHTML =
+        '<div class="type-panel-title">' + typeNames[t] + '</div>' +
+        '<div class="sub-group">' +
+          '<div class="sub-group-label">Title</div>' +
+          buildRow(t, 'title', 'font', s.title.font) +
+          buildInlineRow(t, 'title', s.title) +
+        '</div>' +
+        '<div class="sub-group">' +
+          '<div class="sub-group-label">Subtext</div>' +
+          buildRow(t, 'sub', 'font', s.subtext.font) +
+          buildSubtextRow(t, s.subtext) +
+        '</div>' +
+        '<div style="margin-top:6px;text-align:right">' +
+          '<button class="btn btn-sm btn-primary" onclick="saveHeading(' + t + ')">Save Type ' + t + '</button>' +
+        '</div>';
+      container.appendChild(panel);
+    }
+  }
+
+  function buildRow(type, group, prop, value) {
+    var id = 'hs-' + type + '-' + group + '-' + prop;
+    var opts = fontPool.map(function(f) {
+      var sel = (f === value) ? ' selected' : '';
+      return '<option value="' + f + '"' + sel + '>' + f + '</option>';
+    }).join('');
+    return '<div class="row"><label>Font</label><select id="' + id + '">' + opts + '</select></div>';
+  }
+
+  function buildInlineRow(type, group, s) {
+    var pre = 'hs-' + type + '-' + group + '-';
+    return '<div class="row">' +
+      '<label>Size</label><input type="number" id="' + pre + 'size" value="' + s.size + '" min="6" max="72">' +
+      '<label>Color</label><input type="color" id="' + pre + 'color-pick" value="' + s.color + '" onchange="document.getElementById(\'' + pre + 'color\').value=this.value">' +
+      '<input type="text" id="' + pre + 'color" class="hex" value="' + s.color + '" maxlength="7" onchange="document.getElementById(\'' + pre + 'color-pick\').value=this.value">' +
+      '</div><div class="row">' +
+      '<label>Align</label>' + buildSelect(pre + 'align', alignOptions, s.align) +
+      '<label>Weight</label>' + buildSelect(pre + 'weight', weightOptions, s.weight) +
+      '<label>Transform</label>' + buildSelect(pre + 'transform', transformOptions, s.transform) +
+      '</div><div class="row">' +
+      '<label>Spacing</label><input type="number" id="' + pre + 'spacing" value="' + s.spacing + '" min="0" max="20" step="0.5">' +
+      '<label>Underline</label>' + buildSelect(pre + 'underline', underlineOptions, s.underline) +
+      '</div>';
+  }
+
+  function buildSubtextRow(type, s) {
+    var pre = 'hs-' + type + '-sub-';
+    return '<div class="row">' +
+      '<label>Size</label><input type="number" id="' + pre + 'size" value="' + s.size + '" min="6" max="36">' +
+      '<label>Color</label><input type="color" id="' + pre + 'color-pick" value="' + s.color + '" onchange="document.getElementById(\'' + pre + 'color\').value=this.value">' +
+      '<input type="text" id="' + pre + 'color" class="hex" value="' + s.color + '" maxlength="7" onchange="document.getElementById(\'' + pre + 'color-pick\').value=this.value">' +
+      '</div><div class="row">' +
+      '<label>Weight</label>' + buildSelect(pre + 'weight', weightOptions, s.weight) +
+      '<label>Position</label>' + buildSelect(pre + 'position', subtextPosOptions, s.position) +
+      '</div>';
+  }
+
+  function buildSelect(id, options, current) {
+    var opts = options.map(function(o) {
+      var sel = (o === current) ? ' selected' : '';
+      return '<option value="' + o + '"' + sel + '>' + o + '</option>';
+    }).join('');
+    return '<select id="' + id + '">' + opts + '</select>';
+  }
+
+  // ======== SAVE HEADING ========
+  function saveHeading(type) {
+    var pre = 'hs-' + type + '-';
+    var styleObj = {
+      title: {
+        font:      val(pre + 'title-font'),
+        size:      val(pre + 'title-size'),
+        color:     val(pre + 'title-color'),
+        align:     val(pre + 'title-align'),
+        weight:    val(pre + 'title-weight'),
+        transform: val(pre + 'title-transform'),
+        spacing:   val(pre + 'title-spacing'),
+        underline: val(pre + 'title-underline')
+      },
+      subtext: {
+        font:     val(pre + 'sub-font'),
+        size:     val(pre + 'sub-size'),
+        color:    val(pre + 'sub-color'),
+        weight:   val(pre + 'sub-weight'),
+        position: val(pre + 'sub-position')
+      }
+    };
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveHeadingStyle(type, styleObj);
+  }
+
+  // ======== WINE ENTRY ========
+  function renderWineEntry(we) {
+    populateFontSelect('wine-font', we.font);
+    document.getElementById('wine-size').value = we.size;
+    document.getElementById('wine-color-pick').value = we.color;
+    document.getElementById('wine-color-hex').value = we.color;
+    document.getElementById('wine-weight').value = we.weight;
+    document.getElementById('wine-style').value = we.style;
+    document.getElementById('wine-color-pick').onchange = function() { document.getElementById('wine-color-hex').value = this.value; };
+    document.getElementById('wine-color-hex').onchange = function() { document.getElementById('wine-color-pick').value = this.value; };
+  }
+
+  function saveWineEntry() {
+    var obj = {
+      font:   val('wine-font'),
+      size:   val('wine-size'),
+      color:  val('wine-color-hex'),
+      weight: val('wine-weight'),
+      style:  val('wine-style')
+    };
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveWineEntryStyle(obj);
+  }
+
+  // ======== COLORS ========
+  function renderColors(colors) {
+    document.getElementById('color-primary-pick').value = colors.primary;
+    document.getElementById('color-primary-hex').value = colors.primary;
+    document.getElementById('color-text-pick').value = colors.text;
+    document.getElementById('color-text-hex').value = colors.text;
+  }
+
+  function syncColor(slot) {
+    document.getElementById('color-' + slot + '-hex').value = document.getElementById('color-' + slot + '-pick').value;
+  }
+  function syncColorFromHex(slot) {
+    var hex = document.getElementById('color-' + slot + '-hex').value;
+    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+      document.getElementById('color-' + slot + '-pick').value = hex;
+    }
+  }
+  function saveColorSetting(slot) {
+    var hex = document.getElementById('color-' + slot + '-hex').value;
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveColor(slot, hex);
+  }
+
+  // ======== IMAGES ========
+  function renderImages(images) {
+    document.getElementById('img-logo-name').textContent = images.logo;
+    document.getElementById('img-footer-name').textContent = images.footer;
+  }
+
+  function uploadImage(slot, input) {
+    if (!input.files.length) return;
+    var file = input.files[0];
+    var reader = new FileReader();
+    reader.onload = function() {
+      var base64 = reader.result.split(',')[1];
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.success) {
+            document.getElementById('img-' + slot + '-name').textContent = r.fileName;
+            showStatus('success', r.message);
+          } else { showStatus('error', r.message); }
+        })
+        .withFailureHandler(function(e) { showStatus('error', e.message); })
+        .saveImageFile(slot, base64, file.name);
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  // ======== WELCOME / TITLE PAGE ========
+  function renderWelcome(w) {
+    document.getElementById('show-title-page').checked = w.showTitlePage;
+    document.getElementById('show-date').checked = w.showDate;
+    document.getElementById('welcome-line1').value = w.line1;
+    document.getElementById('welcome-line2').value = w.line2;
+    document.getElementById('welcome-line3').value = w.line3;
+  }
+
+  function saveWelcomeToggles() {
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveWelcomeToggles(
+        document.getElementById('show-title-page').checked,
+        document.getElementById('show-date').checked
+      );
+  }
+
+  function saveWelcome() {
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveWelcomeText(
+        document.getElementById('welcome-line1').value,
+        document.getElementById('welcome-line2').value,
+        document.getElementById('welcome-line3').value
+      );
+  }
+
+  // ======== FOOTER ========
+  function renderFooter(f) {
+    document.getElementById('footer-style').value = f.style;
+    document.getElementById('show-running-label').checked = f.showRunningLabel;
+    document.getElementById('running-label-position').value = f.runningLabelPosition;
+  }
+
+  function saveFooter() {
+    var obj = {
+      style: val('footer-style'),
+      showRunningLabel: document.getElementById('show-running-label').checked,
+      runningLabelPosition: val('running-label-position')
+    };
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveFooterSettings(obj);
+  }
+
+  // ======== FONT POOL ========
+  function renderFontPool() {
+    var container = document.getElementById('font-pool-list');
+    if (fontPool.length === 0) {
+      container.innerHTML = '<p style="color:#999;font-size:12px">No fonts found in the spreadsheet folder.</p>';
+      return;
+    }
+    container.innerHTML = fontPool.map(function(f) {
+      return '<div style="font-size:12px;padding:2px 0">• ' + f + '</div>';
+    }).join('');
+  }
+
+  function uploadFont(input) {
+    if (!input.files.length) return;
+    var file = input.files[0];
+    var reader = new FileReader();
+    reader.onload = function() {
+      var base64 = reader.result.split(',')[1];
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.success) {
+            if (fontPool.indexOf(r.fileName) === -1) fontPool.push(r.fileName);
+            fontPool.sort();
+            renderFontPool();
+            showStatus('success', 'Font uploaded: ' + r.fileName);
+          } else { showStatus('error', r.message); }
+        })
+        .withFailureHandler(function(e) { showStatus('error', e.message); })
+        .saveFontFile(base64, file.name);
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  // ======== RESET ========
+  function resetAll() {
+    if (!confirm('Reset ALL settings to the current brand defaults? This cannot be undone.')) return;
+    google.script.run
+      .withSuccessHandler(function(r) {
+        showStatus('success', r.message);
+        google.script.run.withSuccessHandler(initSettings).getAllSettings();
+      })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .resetAllDefaults();
+  }
+
+  // ======== HELPERS ========
+  function val(id) { return document.getElementById(id).value; }
+
+  function populateFontSelect(id, current) {
+    var sel = document.getElementById(id);
+    sel.innerHTML = fontPool.map(function(f) {
+      var s = (f === current) ? ' selected' : '';
+      return '<option value="' + f + '"' + s + '>' + f + '</option>';
+    }).join('');
+  }
+
+  function showStatus(type, message) {
+    var el = document.getElementById('status');
+    el.className = 'status ' + type;
+    el.textContent = message;
+    if (type === 'success') {
+      setTimeout(function() { if (el.classList.contains('success')) el.style.display = 'none'; }, 3000);
+    }
+  }
+</script>
+</body>
+</html>
