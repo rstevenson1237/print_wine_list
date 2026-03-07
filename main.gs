@@ -55,16 +55,24 @@ function loadAssets() {
   }
   fontFiles.add(wineEntry.font);
 
+  // Resolve MIME types from file extensions so SVG footer icons load correctly
+  var imageMimeMap = {
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+    svg: 'image/svg+xml', webp: 'image/webp'
+  };
+  var footerMime = imageMimeMap[extensionOf(imageSettings.footer)] || 'image/png';
+  var logoMime   = imageMimeMap[extensionOf(imageSettings.logo)]   || 'image/png';
+
   // Load images
-  var footerImageUri = getFileAsDataUri(imageSettings.footer, 'image/png');
-  var logoImageUri = getFileAsDataUri(imageSettings.logo, 'image/png');
+  var footerImageUri = getFileAsDataUri(imageSettings.footer, footerMime);
+  var logoImageUri   = getFileAsDataUri(imageSettings.logo,   logoMime);
 
   // Load fonts
   var fontUris = new Map();
   var missing = [];
 
   if (!footerImageUri) missing.push('Footer image (' + imageSettings.footer + ')');
-  if (!logoImageUri) missing.push('Logo image (' + imageSettings.logo + ')');
+  if (!logoImageUri)   missing.push('Logo image ('   + imageSettings.logo   + ')');
 
   fontFiles.forEach(function(fileName) {
     var ext = extensionOf(fileName);
@@ -90,8 +98,8 @@ function loadAssets() {
 
   return {
     footerImageUri: footerImageUri,
-    logoImageUri: logoImageUri,
-    fontUris: fontUris
+    logoImageUri:   logoImageUri,
+    fontUris:       fontUris
   };
 }
 
