@@ -6,7 +6,6 @@
     h3 { margin: 18px 0 8px 0; font-size: 15px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
     h4 { margin: 10px 0 6px 0; font-size: 13px; color: #555; }
 
-    .section { margin-bottom: 16px; }
     .row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
     .row label { min-width: 80px; font-size: 12px; color: #666; }
     .row select, .row input[type="number"], .row input[type="text"] {
@@ -22,24 +21,55 @@
     .sub-group { margin-left: 10px; padding-left: 10px; border-left: 2px solid #ddd; margin-bottom: 6px; }
     .sub-group-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
 
-    textarea { width: 100%; height: 50px; padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; resize: vertical; }
+    /* Font & wine preview bars */
+    .font-preview {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 3px;
+      padding: 6px 10px;
+      margin: 6px 0 4px;
+      min-height: 26px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: #333;
+    }
+    .font-preview-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+
+    /* Image assignment */
+    .image-assign-block { margin-bottom: 14px; }
+    .image-assign-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; flex-wrap: wrap; }
+    .image-assign-row label { min-width: 60px; font-size: 12px; color: #666; }
+    .image-assign-row select { flex: 1; max-width: 240px; padding: 3px 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; }
+    .img-thumb-wrap {
+      margin-top: 4px;
+      height: 56px;
+      max-width: 200px;
+      background: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .img-thumb-wrap img { max-width: 100%; max-height: 54px; object-fit: contain; display: block; }
+    .img-thumb-wrap .no-thumb { font-size: 11px; color: #bbb; }
+
+    textarea { width: 100%; height: 50px; padding: 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; resize: vertical; box-sizing: border-box; }
 
     .btn { padding: 6px 14px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
     .btn-primary { background: #4285f4; color: white; }
     .btn-primary:hover { background: #3367d6; }
-    .btn-danger { background: #ea4335; color: white; }
-    .btn-danger:hover { background: #c5221f; }
+    .btn-danger  { background: #ea4335; color: white; }
+    .btn-danger:hover  { background: #c5221f; }
     .btn-warning { background: #f9ab00; color: white; }
     .btn-warning:hover { background: #e69500; }
     .btn-sm { padding: 4px 10px; font-size: 11px; }
 
-    .file-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-    .file-row .filename { font-size: 12px; color: #555; flex: 1; }
-    .file-row input[type="file"] { display: none; }
-
     .status { padding: 6px 10px; border-radius: 3px; margin: 8px 0; font-size: 12px; display: none; }
     .status.success { display: block; background: #e6f4ea; color: #137333; }
-    .status.error { display: block; background: #fce8e6; color: #c5221f; }
+    .status.error   { display: block; background: #fce8e6; color: #c5221f; }
 
     .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 12px; flex-wrap: wrap; }
     .tab { padding: 8px 14px; cursor: pointer; font-size: 12px; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; }
@@ -56,9 +86,66 @@
     .checkbox-row label { font-size: 12px; color: #666; min-width: auto; }
 
     .help-text { font-size: 11px; color: #999; margin-top: 2px; margin-bottom: 8px; }
+
+    /* Asset pool lists */
+    .asset-pool-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 4px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #444;
+    }
+    .asset-pool-item:last-child { border-bottom: none; }
+    .asset-icon { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; }
+    .asset-name { min-width: 180px; }
+    .asset-preview-sample { overflow: hidden; white-space: nowrap; flex: 1; }
+
+    /* Upload drop zone */
+    .drop-zone {
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      padding: 18px 12px;
+      text-align: center;
+      color: #999;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #4285f4;
+      background: #f0f4ff;
+      color: #4285f4;
+    }
+    .drop-zone .drop-hint { font-size: 13px; }
+    .drop-zone .drop-types { font-size: 11px; margin-top: 4px; color: #aaa; }
+
+    /* Loading overlay */
+    #loading-overlay {
+      position: fixed; inset: 0; background: #fff;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100; font-size: 13px; color: #888;
+      gap: 10px;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #4285f4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+
+  <!-- Loading overlay — hidden once both server calls complete -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div>Loading settings…</div>
+  </div>
 
   <!-- Brand Preset Bar -->
   <div class="brand-bar">
@@ -69,13 +156,13 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('page')">Page Layout</div>
-    <div class="tab" onclick="switchTab('headings')">Heading Styles</div>
-    <div class="tab" onclick="switchTab('wine')">Wine Entry</div>
-    <div class="tab" onclick="switchTab('brand')">Brand / Images</div>
-    <div class="tab" onclick="switchTab('welcome')">Title Page</div>
-    <div class="tab" onclick="switchTab('footer')">Footer</div>
-    <div class="tab" onclick="switchTab('fonts')">Fonts</div>
+    <div class="tab active" onclick="switchTab('page',     this)">Page Layout</div>
+    <div class="tab"        onclick="switchTab('headings', this)">Heading Styles</div>
+    <div class="tab"        onclick="switchTab('wine',     this)">Wine Entry</div>
+    <div class="tab"        onclick="switchTab('brand',    this)">Brand</div>
+    <div class="tab"        onclick="switchTab('welcome',  this)">Title Page</div>
+    <div class="tab"        onclick="switchTab('footer',   this)">Footer</div>
+    <div class="tab"        onclick="switchTab('assets',   this)">Assets</div>
   </div>
 
   <div id="status" class="status"></div>
@@ -88,14 +175,14 @@
       <select id="page-size-preset" onchange="applyPageSizePreset()"></select>
     </div>
     <div class="row">
-      <label>Width (in)</label><input type="number" id="page-width" min="4" max="14" step="0.25">
+      <label>Width (in)</label><input type="number" id="page-width"  min="4" max="14" step="0.25">
       <label>Height (in)</label><input type="number" id="page-height" min="4" max="18" step="0.25">
     </div>
 
     <h3>Margins (inches)</h3>
-    <div class="help-text">Inner margin = gutter (binding side). Outer margin = far edge. All lists use book-spread (alternating) layout.</div>
+    <div class="help-text">Inner = gutter (binding side). Outer = far edge. All lists use book-spread (alternating) layout.</div>
     <div class="row">
-      <label>Top</label><input type="number" id="page-margin-top" min="0.25" max="2" step="0.05">
+      <label>Top</label><input type="number"    id="page-margin-top"    min="0.25" max="2" step="0.05">
       <label>Bottom</label><input type="number" id="page-margin-bottom" min="0.25" max="2" step="0.05">
     </div>
     <div class="row">
@@ -112,7 +199,6 @@
       <label>Front Matter Pages</label><input type="number" id="front-matter-pages" min="0" max="10" step="1">
     </div>
     <div class="help-text">Number of pages before content starts (title + TOC). Affects page numbering offset.</div>
-
     <div style="margin-top:12px"><button class="btn btn-primary" onclick="savePageLayout()">Save Page Layout</button></div>
   </div>
 
@@ -125,18 +211,26 @@
   <div id="tab-wine" class="tab-content">
     <h3>Wine Entry Style</h3>
     <div class="row">
-      <label>Font</label><select id="wine-font"></select>
-      <label>Size</label><input type="number" id="wine-size" min="8" max="24">
+      <label>Font</label><select id="wine-font" onchange="updateWinePreview()"></select>
+      <label>Size</label><input type="number" id="wine-size" min="8" max="24" onchange="updateWinePreview()">
     </div>
     <div class="row">
       <label>Color</label>
-      <input type="color" id="wine-color-pick">
-      <input type="text" id="wine-color-hex" class="hex" maxlength="7">
+      <input type="color" id="wine-color-pick"
+             onchange="document.getElementById('wine-color-hex').value=this.value; updateWinePreview()">
+      <input type="text"  id="wine-color-hex" class="hex" maxlength="7"
+             onchange="document.getElementById('wine-color-pick').value=this.value; updateWinePreview()">
       <label>Weight</label>
-      <select id="wine-weight"><option value="normal">Normal</option><option value="bold">Bold</option></select>
+      <select id="wine-weight" onchange="updateWinePreview()">
+        <option value="normal">Normal</option><option value="bold">Bold</option>
+      </select>
       <label>Style</label>
-      <select id="wine-style"><option value="normal">Normal</option><option value="italic">Italic</option></select>
+      <select id="wine-style" onchange="updateWinePreview()">
+        <option value="normal">Normal</option><option value="italic">Italic</option>
+      </select>
     </div>
+    <div class="font-preview-label">Preview</div>
+    <div class="font-preview" id="wine-preview">Domaine de la Romanée-Conti, Burgundy — 245</div>
     <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveWineEntry()">Save Wine Entry Style</button></div>
   </div>
 
@@ -146,28 +240,39 @@
     <div class="row">
       <label>Primary</label>
       <input type="color" id="color-primary-pick" onchange="syncColor('primary')">
-      <input type="text" id="color-primary-hex" class="hex" maxlength="7" onchange="syncColorFromHex('primary')">
+      <input type="text"  id="color-primary-hex" class="hex" maxlength="7" onchange="syncColorFromHex('primary')">
       <button class="btn btn-sm btn-primary" onclick="saveColorSetting('primary')">Save</button>
     </div>
     <div class="row">
       <label>Text</label>
       <input type="color" id="color-text-pick" onchange="syncColor('text')">
-      <input type="text" id="color-text-hex" class="hex" maxlength="7" onchange="syncColorFromHex('text')">
+      <input type="text"  id="color-text-hex" class="hex" maxlength="7" onchange="syncColorFromHex('text')">
       <button class="btn btn-sm btn-primary" onclick="saveColorSetting('text')">Save</button>
     </div>
 
     <h3>Images</h3>
-    <div class="file-row">
-      <label>Logo</label>
-      <span class="filename" id="img-logo-name">—</span>
-      <button class="btn btn-sm btn-primary" onclick="document.getElementById('img-logo-file').click()">Change</button>
-      <input type="file" id="img-logo-file" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadImage('logo', this)">
+    <div class="help-text">Select the image to use from the files in your Drive folder. Upload new images in the Assets tab.</div>
+
+    <div class="image-assign-block">
+      <div class="image-assign-row">
+        <label>Logo</label>
+        <select id="img-logo-select" onchange="previewImage('logo')"></select>
+        <button class="btn btn-sm btn-primary" onclick="saveImageAssignmentUI('logo')">Save</button>
+      </div>
+      <div class="img-thumb-wrap" id="img-logo-thumb-wrap">
+        <span class="no-thumb">No preview</span>
+      </div>
     </div>
-    <div class="file-row">
-      <label>Footer</label>
-      <span class="filename" id="img-footer-name">—</span>
-      <button class="btn btn-sm btn-primary" onclick="document.getElementById('img-footer-file').click()">Change</button>
-      <input type="file" id="img-footer-file" accept=".png,.jpg,.jpeg,.svg,.webp" onchange="uploadImage('footer', this)">
+
+    <div class="image-assign-block">
+      <div class="image-assign-row">
+        <label>Footer</label>
+        <select id="img-footer-select" onchange="previewImage('footer')"></select>
+        <button class="btn btn-sm btn-primary" onclick="saveImageAssignmentUI('footer')">Save</button>
+      </div>
+      <div class="img-thumb-wrap" id="img-footer-thumb-wrap">
+        <span class="no-thumb">No preview</span>
+      </div>
     </div>
   </div>
 
@@ -207,12 +312,11 @@
       </select>
     </div>
     <div class="help-text">
-      "Decorative Image" uses the footer image file as a full-width decorative border.
+      "Decorative Image" uses the footer image as a full-width decorative border.
       "Thin Rule" draws a simple line with the page number.
-      "Ruxton Bar" draws a double green bar across the full page width with the page number
-      and footer icon on the outer edge, alternating for spread printing. Upload an SVG file
-      as the footer image for best results — ensure the SVG has explicit width and height
-      attributes set to the intended display size (e.g. 20×20).
+      "Ruxton Bar" draws a double green bar with the page number and footer icon on the outer edge,
+      alternating for spread printing. Use an SVG footer image for best results — the SVG should have
+      explicit width and height attributes set to the intended display size (e.g. 20×20).
     </div>
 
     <h3>Running Section Label</h3>
@@ -227,21 +331,32 @@
         <option value="footer">Bottom of page</option>
       </select>
     </div>
-    <div class="help-text">The label shows the current top-level section name (e.g., "SPARKLING", "WHITE", "RED") and alternates left/right for spread printing.</div>
-
+    <div class="help-text">The label shows the current top-level section name (e.g., "SPARKLING", "RED") and alternates left/right for spread printing.</div>
     <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveFooter()">Save Footer Settings</button></div>
   </div>
 
-  <!-- ======== FONTS TAB ======== -->
-  <div id="tab-fonts" class="tab-content">
+  <!-- ======== ASSETS TAB ======== -->
+  <div id="tab-assets" class="tab-content">
     <h3>Font Library</h3>
-    <p style="font-size:12px;color:#666;margin-bottom:10px;">
-      Upload font files here. They become available in the font dropdowns for heading and wine entry styles.
-    </p>
+    <div class="help-text">Font files in the spreadsheet's Drive folder. Available in font dropdowns throughout settings.</div>
     <div id="font-pool-list"></div>
-    <div style="margin-top:10px">
-      <button class="btn btn-primary" onclick="document.getElementById('font-upload-file').click()">Upload Font</button>
-      <input type="file" id="font-upload-file" accept=".otf,.ttf,.woff,.woff2" onchange="uploadFont(this)" style="display:none">
+
+    <h3>Image Library</h3>
+    <div class="help-text">Image files in the spreadsheet's Drive folder. Available in image selectors in the Brand tab.</div>
+    <div id="image-pool-list"></div>
+
+    <h3>Upload File</h3>
+    <div class="help-text">Upload a font or image to the Drive folder. The file is immediately available for use — no restart needed.</div>
+    <div class="drop-zone" id="asset-drop-zone">
+      <div class="drop-hint">Click to select a file, or drag and drop here</div>
+      <div class="drop-types">Fonts: .otf &nbsp;.ttf &nbsp;.woff &nbsp;.woff2 &nbsp;&nbsp;|&nbsp;&nbsp; Images: .png &nbsp;.jpg &nbsp;.svg &nbsp;.webp</div>
+      <input type="file" id="asset-upload-input"
+             accept=".otf,.ttf,.woff,.woff2,.png,.jpg,.jpeg,.svg,.webp"
+             onchange="handleAssetUpload(this)"
+             style="display:none">
+    </div>
+    <div id="upload-progress" style="display:none; font-size:12px; color:#4285f4; margin-top:8px; padding:4px 0;">
+      Uploading…
     </div>
   </div>
 
@@ -251,99 +366,230 @@
   </div>
 
 <script>
-  var fontPool = [];
-  var typeNames = { 1: 'Type 1 — STYLE', 2: 'Type 2 — COUNTRY', 3: 'Type 3 — REGION', 4: 'Type 4 — APPELLATION' };
-  var alignOptions = ['left', 'center', 'right'];
-  var weightOptions = ['normal', 'bold'];
-  var transformOptions = ['none', 'uppercase', 'lowercase'];
-  var underlineOptions = ['none', 'text', 'partial', 'full'];
-  var subtextPosOptions = ['below', 'inline'];
+  // ============================================================================
+  // State
+  // ============================================================================
 
-  // ======== TAB SWITCHING ========
-  function switchTab(name) {
-    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-    event.target.classList.add('active');
-    document.getElementById('tab-' + name).classList.add('active');
+  var fontPool  = [];
+  var imagePool = [];
+  var assetUris = { fonts: {}, images: {} };  // data URIs loaded for live previews
+
+  var typeNames      = { 1: 'Type 1 — STYLE', 2: 'Type 2 — COUNTRY', 3: 'Type 3 — REGION', 4: 'Type 4 — APPELLATION' };
+  var alignOptions   = ['left', 'center', 'right'];
+  var weightOptions  = ['normal', 'bold'];
+  var transformOpts  = ['none', 'uppercase', 'lowercase'];
+  var underlineOpts  = ['none', 'text', 'partial', 'full'];
+  var subtextPosOpts = ['below', 'inline'];
+
+  // ============================================================================
+  // Initialisation — two parallel server calls
+  // ============================================================================
+
+  var _initData  = {};
+  var _initCount = 0;
+
+  function _checkInit() {
+    _initCount++;
+    if (_initCount >= 2) _finalizeInit();
   }
 
-  // ======== INITIALIZATION ========
-  google.script.run.withSuccessHandler(initSettings).getAllSettings();
+  // Fire both calls immediately — they execute concurrently from the client's perspective
+  google.script.run
+    .withSuccessHandler(function(s) { _initData.settings = s; _checkInit(); })
+    .withFailureHandler(function(e) { showStatus('error', 'Failed to load settings: ' + e.message); })
+    .getAllSettings();
 
-  function initSettings(settings) {
-    fontPool = settings.fontPool || [];
+  google.script.run
+    .withSuccessHandler(function(a) { _initData.assets = a || { fonts: {}, images: {} }; _checkInit(); })
+    .withFailureHandler(function()  { _initData.assets = { fonts: {}, images: {} };      _checkInit(); })
+    .getAssetPreviewData();
 
-    // Brand dropdown
-    var brandSel = document.getElementById('brand-select');
-    brandSel.innerHTML = (settings.brandPresets || []).map(function(b) {
-      var sel = (b === settings.brandName) ? ' selected' : '';
-      return '<option value="' + b + '"' + sel + '>' + b + '</option>';
-    }).join('');
+  function _finalizeInit() {
+    var settings = _initData.settings;
+    var assets   = _initData.assets;
 
-    // Page size preset dropdown
-    var sizeSel = document.getElementById('page-size-preset');
-    sizeSel.innerHTML = (settings.pageSizes || []).map(function(s) {
-      var sel = (s === settings.pageSettings.sizePreset) ? ' selected' : '';
-      return '<option value="' + s + '"' + sel + '>' + s + '</option>';
-    }).join('');
+    fontPool  = settings.fontPool  || [];
+    imagePool = settings.imagePool || [];
+    assetUris = assets;
 
+    // Inject @font-face rules so previews render correctly
+    injectFontFaces(assets.fonts || {});
+
+    // Populate brand & page-size dropdowns
+    populateSelect('brand-select', settings.brandPresets || [], settings.brandName);
+    populateSelect('page-size-preset', settings.pageSizes || [], settings.pageSettings.sizePreset);
+
+    // Render all sections
     renderPageSettings(settings.pageSettings);
     renderHeadingPanels(settings.headingStyles);
     renderWineEntry(settings.wineEntry);
     renderColors(settings.colors);
-    renderImages(settings.images);
+    renderImageAssignments(settings.images);
     renderWelcome(settings.welcome);
     renderFooter(settings.footer);
     renderFontPool();
+    renderImagePool();
+
+    // Kick off all live previews
+    updateAllPreviews();
+
+    // Remove loading overlay
+    document.getElementById('loading-overlay').style.display = 'none';
   }
 
-  // ======== BRAND PRESET ========
+  // ============================================================================
+  // Font Face Injection
+  // ============================================================================
+
+  function injectFontFaces(fontsData) {
+    var css = '';
+    Object.keys(fontsData).forEach(function(fileName) {
+      var fd     = fontsData[fileName];
+      var family = fileName.replace(/\.[^.]+$/, '');
+      css += '@font-face { font-family: "' + family + '"; src: url("' + fd.uri + '") format("' + fd.format + '"); }\n';
+    });
+    if (!css) return;
+    var style = document.createElement('style');
+    style.id  = 'font-face-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  /** Appends a single new @font-face rule after an upload, without full re-injection. */
+  function addFontFace(fileName, uri, format) {
+    var style = document.getElementById('font-face-styles');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'font-face-styles';
+      document.head.appendChild(style);
+    }
+    var family = fileName.replace(/\.[^.]+$/, '');
+    style.textContent += '@font-face { font-family: "' + family + '"; src: url("' + uri + '") format("' + format + '"); }\n';
+  }
+
+  // ============================================================================
+  // Live Previews
+  // ============================================================================
+
+  function updateAllPreviews() {
+    for (var t = 1; t <= 4; t++) updatePreview(t);
+    updateWinePreview();
+  }
+
+  function updatePreview(type) {
+    var el = document.getElementById('preview-t' + type);
+    if (!el) return;
+    var pre    = 'hs-' + type + '-title-';
+    var font   = valSafe(pre + 'font');
+    var size   = valSafe(pre + 'size');
+    var color  = valSafe(pre + 'color') || valSafe(pre + 'color-pick');
+    var weight = valSafe(pre + 'weight');
+    var xform  = valSafe(pre + 'transform');
+    if (!font) return;
+    var family = font.replace(/\.[^.]+$/, '');
+    el.style.fontFamily    = '"' + family + '"';
+    el.style.fontSize      = (size || '14') + 'pt';
+    el.style.color         = color  || '#333';
+    el.style.fontWeight    = weight || 'normal';
+    el.style.textTransform = xform  || 'none';
+  }
+
+  function updateWinePreview() {
+    var el = document.getElementById('wine-preview');
+    if (!el) return;
+    var font   = valSafe('wine-font');
+    var size   = valSafe('wine-size');
+    var color  = valSafe('wine-color-hex') || valSafe('wine-color-pick');
+    var weight = valSafe('wine-weight');
+    var style  = valSafe('wine-style');
+    if (!font) return;
+    var family = font.replace(/\.[^.]+$/, '');
+    el.style.fontFamily = '"' + family + '"';
+    el.style.fontSize   = (size || '12') + 'pt';
+    el.style.color      = color  || '#333';
+    el.style.fontWeight = weight || 'normal';
+    el.style.fontStyle  = style  || 'normal';
+  }
+
+  // ============================================================================
+  // Tab Switching
+  // ============================================================================
+
+  function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(function(t)        { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  // ============================================================================
+  // Brand Preset
+  // ============================================================================
+
   function loadPreset() {
     var brand = document.getElementById('brand-select').value;
     if (!confirm('Load the "' + brand + '" preset? This will overwrite ALL current settings.')) return;
     google.script.run
       .withSuccessHandler(function(r) {
         showStatus(r.success ? 'success' : 'error', r.message);
-        if (r.success) {
-          google.script.run.withSuccessHandler(initSettings).getAllSettings();
-        }
+        if (r.success) google.script.run.withSuccessHandler(_reInitSettings).getAllSettings();
       })
       .withFailureHandler(function(e) { showStatus('error', e.message); })
       .loadBrandPreset(brand);
   }
 
-  // ======== PAGE LAYOUT ========
+  /** Re-populates settings controls after a preset load (assets remain cached). */
+  function _reInitSettings(settings) {
+    fontPool  = settings.fontPool  || [];
+    imagePool = settings.imagePool || [];
+    populateSelect('brand-select',    settings.brandPresets || [],      settings.brandName);
+    populateSelect('page-size-preset',settings.pageSizes    || [],      settings.pageSettings.sizePreset);
+    renderPageSettings(settings.pageSettings);
+    renderHeadingPanels(settings.headingStyles);
+    renderWineEntry(settings.wineEntry);
+    renderColors(settings.colors);
+    renderImageAssignments(settings.images);
+    renderWelcome(settings.welcome);
+    renderFooter(settings.footer);
+    renderFontPool();
+    renderImagePool();
+    updateAllPreviews();
+  }
+
+  // ============================================================================
+  // Page Layout
+  // ============================================================================
+
   function renderPageSettings(pg) {
-    document.getElementById('page-width').value = pg.width;
-    document.getElementById('page-height').value = pg.height;
-    document.getElementById('page-margin-top').value = pg.marginTop;
+    document.getElementById('page-width').value         = pg.width;
+    document.getElementById('page-height').value        = pg.height;
+    document.getElementById('page-margin-top').value    = pg.marginTop;
     document.getElementById('page-margin-bottom').value = pg.marginBottom;
-    document.getElementById('page-margin-inner').value = pg.marginInner;
-    document.getElementById('page-margin-outer').value = pg.marginOuter;
-    document.getElementById('page-buffer').value = pg.pageBuffer;
+    document.getElementById('page-margin-inner').value  = pg.marginInner;
+    document.getElementById('page-margin-outer').value  = pg.marginOuter;
+    document.getElementById('page-buffer').value        = pg.pageBuffer;
     document.getElementById('front-matter-pages').value = pg.frontMatterPages;
   }
 
   function applyPageSizePreset() {
     var label = document.getElementById('page-size-preset').value;
-    // Parse dimensions from label: e.g., "US Letter (8.5 × 11)"
     var match = label.match(/([\d.]+)\s*[×x]\s*([\d.]+)/);
     if (match) {
-      document.getElementById('page-width').value = parseFloat(match[1]);
+      document.getElementById('page-width').value  = parseFloat(match[1]);
       document.getElementById('page-height').value = parseFloat(match[2]);
     }
   }
 
   function savePageLayout() {
     var obj = {
-      sizePreset:      document.getElementById('page-size-preset').value,
-      width:           parseFloat(val('page-width')),
-      height:          parseFloat(val('page-height')),
-      marginTop:       parseFloat(val('page-margin-top')),
-      marginBottom:    parseFloat(val('page-margin-bottom')),
-      marginInner:     parseFloat(val('page-margin-inner')),
-      marginOuter:     parseFloat(val('page-margin-outer')),
-      pageBuffer:      parseInt(val('page-buffer')),
+      sizePreset:       document.getElementById('page-size-preset').value,
+      width:            parseFloat(val('page-width')),
+      height:           parseFloat(val('page-height')),
+      marginTop:        parseFloat(val('page-margin-top')),
+      marginBottom:     parseFloat(val('page-margin-bottom')),
+      marginInner:      parseFloat(val('page-margin-inner')),
+      marginOuter:      parseFloat(val('page-margin-outer')),
+      pageBuffer:       parseInt(val('page-buffer')),
       frontMatterPages: parseInt(val('front-matter-pages'))
     };
     google.script.run
@@ -352,81 +598,95 @@
       .savePageSettings(obj);
   }
 
-  // ======== HEADING PANELS ========
+  // ============================================================================
+  // Heading Panels
+  // ============================================================================
+
   function renderHeadingPanels(styles) {
     var container = document.getElementById('heading-panels');
     container.innerHTML = '';
     for (var t = 1; t <= 4; t++) {
-      var s = styles[t];
+      var s     = styles[t];
       var panel = document.createElement('div');
       panel.className = 'type-panel';
       panel.innerHTML =
         '<div class="type-panel-title">' + typeNames[t] + '</div>' +
         '<div class="sub-group">' +
           '<div class="sub-group-label">Title</div>' +
-          buildRow(t, 'title', 'font', s.title.font) +
-          buildInlineRow(t, 'title', s.title) +
+          buildFontRow(t, 'title', s.title.font) +
+          buildTitleInlineRow(t, s.title) +
         '</div>' +
         '<div class="sub-group">' +
           '<div class="sub-group-label">Subtext</div>' +
-          buildRow(t, 'sub', 'font', s.subtext.font) +
+          buildFontRow(t, 'sub', s.subtext.font) +
           buildSubtextRow(t, s.subtext) +
         '</div>' +
-        '<div style="margin-top:6px;text-align:right">' +
+        '<div class="font-preview-label">Title preview</div>' +
+        '<div class="font-preview" id="preview-t' + t + '">Champagne &amp; Sparkling — France</div>' +
+        '<div style="margin-top:8px;text-align:right">' +
           '<button class="btn btn-sm btn-primary" onclick="saveHeading(' + t + ')">Save Type ' + t + '</button>' +
         '</div>';
       container.appendChild(panel);
     }
   }
 
-  function buildRow(type, group, prop, value) {
-    var id = 'hs-' + type + '-' + group + '-' + prop;
+  function buildFontRow(type, group, value) {
+    var id   = 'hs-' + type + '-' + group + '-font';
+    var ch   = ' onchange="updatePreview(' + type + ')"';
     var opts = fontPool.map(function(f) {
-      var sel = (f === value) ? ' selected' : '';
-      return '<option value="' + f + '"' + sel + '>' + f + '</option>';
+      return '<option value="' + f + '"' + (f === value ? ' selected' : '') + '>' + f + '</option>';
     }).join('');
-    return '<div class="row"><label>Font</label><select id="' + id + '">' + opts + '</select></div>';
+    return '<div class="row"><label>Font</label><select id="' + id + '"' + ch + '>' + opts + '</select></div>';
   }
 
-  function buildInlineRow(type, group, s) {
-    var pre = 'hs-' + type + '-' + group + '-';
-    return '<div class="row">' +
-      '<label>Size</label><input type="number" id="' + pre + 'size" value="' + s.size + '" min="6" max="72">' +
-      '<label>Color</label><input type="color" id="' + pre + 'color-pick" value="' + s.color + '" onchange="document.getElementById(\'' + pre + 'color\').value=this.value">' +
-      '<input type="text" id="' + pre + 'color" class="hex" value="' + s.color + '" maxlength="7" onchange="document.getElementById(\'' + pre + 'color-pick\').value=this.value">' +
-      '</div><div class="row">' +
-      '<label>Align</label>' + buildSelect(pre + 'align', alignOptions, s.align) +
-      '<label>Weight</label>' + buildSelect(pre + 'weight', weightOptions, s.weight) +
-      '<label>Transform</label>' + buildSelect(pre + 'transform', transformOptions, s.transform) +
-      '</div><div class="row">' +
-      '<label>Spacing</label><input type="number" id="' + pre + 'spacing" value="' + s.spacing + '" min="0" max="20" step="0.5">' +
-      '<label>Underline</label>' + buildSelect(pre + 'underline', underlineOptions, s.underline) +
-      '</div>';
+  function buildTitleInlineRow(type, s) {
+    var p  = 'hs-' + type + '-title-';
+    var ch = ' onchange="updatePreview(' + type + ')"';
+    return (
+      '<div class="row">' +
+        '<label>Size</label><input type="number" id="' + p + 'size" value="' + s.size + '" min="6" max="72"' + ch + '>' +
+        '<label>Color</label>' +
+        '<input type="color" id="' + p + 'color-pick" value="' + s.color + '" onchange="document.getElementById(\'' + p + 'color\').value=this.value; updatePreview(' + type + ')">' +
+        '<input type="text"  id="' + p + 'color" class="hex" value="' + s.color + '" maxlength="7" onchange="document.getElementById(\'' + p + 'color-pick\').value=this.value; updatePreview(' + type + ')">' +
+      '</div>' +
+      '<div class="row">' +
+        '<label>Align</label>'     + buildSelect(p + 'align',     alignOptions,  s.align)     +
+        '<label>Weight</label>'    + buildSelect(p + 'weight',    weightOptions, s.weight,    'updatePreview(' + type + ')') +
+        '<label>Transform</label>' + buildSelect(p + 'transform', transformOpts, s.transform, 'updatePreview(' + type + ')') +
+      '</div>' +
+      '<div class="row">' +
+        '<label>Spacing</label><input type="number" id="' + p + 'spacing" value="' + s.spacing + '" min="0" max="20" step="0.5">' +
+        '<label>Underline</label>' + buildSelect(p + 'underline', underlineOpts, s.underline) +
+      '</div>'
+    );
   }
 
   function buildSubtextRow(type, s) {
-    var pre = 'hs-' + type + '-sub-';
-    return '<div class="row">' +
-      '<label>Size</label><input type="number" id="' + pre + 'size" value="' + s.size + '" min="6" max="36">' +
-      '<label>Color</label><input type="color" id="' + pre + 'color-pick" value="' + s.color + '" onchange="document.getElementById(\'' + pre + 'color\').value=this.value">' +
-      '<input type="text" id="' + pre + 'color" class="hex" value="' + s.color + '" maxlength="7" onchange="document.getElementById(\'' + pre + 'color-pick\').value=this.value">' +
-      '</div><div class="row">' +
-      '<label>Weight</label>' + buildSelect(pre + 'weight', weightOptions, s.weight) +
-      '<label>Position</label>' + buildSelect(pre + 'position', subtextPosOptions, s.position) +
-      '</div>';
+    var p = 'hs-' + type + '-sub-';
+    return (
+      '<div class="row">' +
+        '<label>Size</label><input type="number" id="' + p + 'size" value="' + s.size + '" min="6" max="36">' +
+        '<label>Color</label>' +
+        '<input type="color" id="' + p + 'color-pick" value="' + s.color + '" onchange="document.getElementById(\'' + p + 'color\').value=this.value">' +
+        '<input type="text"  id="' + p + 'color" class="hex" value="' + s.color + '" maxlength="7" onchange="document.getElementById(\'' + p + 'color-pick\').value=this.value">' +
+      '</div>' +
+      '<div class="row">' +
+        '<label>Weight</label>'   + buildSelect(p + 'weight',   weightOptions,  s.weight) +
+        '<label>Position</label>' + buildSelect(p + 'position', subtextPosOpts, s.position) +
+      '</div>'
+    );
   }
 
-  function buildSelect(id, options, current) {
+  function buildSelect(id, options, current, onchangeFn) {
+    var ch   = onchangeFn ? ' onchange="' + onchangeFn + '"' : '';
     var opts = options.map(function(o) {
-      var sel = (o === current) ? ' selected' : '';
-      return '<option value="' + o + '"' + sel + '>' + o + '</option>';
+      return '<option value="' + o + '"' + (o === current ? ' selected' : '') + '>' + o + '</option>';
     }).join('');
-    return '<select id="' + id + '">' + opts + '</select>';
+    return '<select id="' + id + '"' + ch + '>' + opts + '</select>';
   }
 
-  // ======== SAVE HEADING ========
   function saveHeading(type) {
-    var pre = 'hs-' + type + '-';
+    var pre     = 'hs-' + type + '-';
     var styleObj = {
       title: {
         font:      val(pre + 'title-font'),
@@ -452,16 +712,17 @@
       .saveHeadingStyle(type, styleObj);
   }
 
-  // ======== WINE ENTRY ========
+  // ============================================================================
+  // Wine Entry
+  // ============================================================================
+
   function renderWineEntry(we) {
     populateFontSelect('wine-font', we.font);
-    document.getElementById('wine-size').value = we.size;
-    document.getElementById('wine-color-pick').value = we.color;
-    document.getElementById('wine-color-hex').value = we.color;
-    document.getElementById('wine-weight').value = we.weight;
-    document.getElementById('wine-style').value = we.style;
-    document.getElementById('wine-color-pick').onchange = function() { document.getElementById('wine-color-hex').value = this.value; };
-    document.getElementById('wine-color-hex').onchange = function() { document.getElementById('wine-color-pick').value = this.value; };
+    document.getElementById('wine-size').value        = we.size;
+    document.getElementById('wine-color-pick').value  = we.color;
+    document.getElementById('wine-color-hex').value   = we.color;
+    document.getElementById('wine-weight').value      = we.weight;
+    document.getElementById('wine-style').value       = we.style;
   }
 
   function saveWineEntry() {
@@ -478,23 +739,28 @@
       .saveWineEntryStyle(obj);
   }
 
-  // ======== COLORS ========
+  // ============================================================================
+  // Colors
+  // ============================================================================
+
   function renderColors(colors) {
     document.getElementById('color-primary-pick').value = colors.primary;
-    document.getElementById('color-primary-hex').value = colors.primary;
-    document.getElementById('color-text-pick').value = colors.text;
-    document.getElementById('color-text-hex').value = colors.text;
+    document.getElementById('color-primary-hex').value  = colors.primary;
+    document.getElementById('color-text-pick').value    = colors.text;
+    document.getElementById('color-text-hex').value     = colors.text;
   }
 
   function syncColor(slot) {
     document.getElementById('color-' + slot + '-hex').value = document.getElementById('color-' + slot + '-pick').value;
   }
+
   function syncColorFromHex(slot) {
     var hex = document.getElementById('color-' + slot + '-hex').value;
     if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
       document.getElementById('color-' + slot + '-pick').value = hex;
     }
   }
+
   function saveColorSetting(slot) {
     var hex = document.getElementById('color-' + slot + '-hex').value;
     google.script.run
@@ -503,39 +769,67 @@
       .saveColor(slot, hex);
   }
 
-  // ======== IMAGES ========
-  function renderImages(images) {
-    document.getElementById('img-logo-name').textContent = images.logo;
-    document.getElementById('img-footer-name').textContent = images.footer;
+  // ============================================================================
+  // Image Assignments
+  // ============================================================================
+
+  function renderImageAssignments(images) {
+    populateImageSelect('img-logo-select',   images.logo);
+    populateImageSelect('img-footer-select', images.footer);
+    previewImage('logo');
+    previewImage('footer');
   }
 
-  function uploadImage(slot, input) {
-    if (!input.files.length) return;
-    var file = input.files[0];
-    var reader = new FileReader();
-    reader.onload = function() {
-      var base64 = reader.result.split(',')[1];
-      google.script.run
-        .withSuccessHandler(function(r) {
-          if (r.success) {
-            document.getElementById('img-' + slot + '-name').textContent = r.fileName;
-            showStatus('success', r.message);
-          } else { showStatus('error', r.message); }
-        })
-        .withFailureHandler(function(e) { showStatus('error', e.message); })
-        .saveImageFile(slot, base64, file.name);
-    };
-    reader.readAsDataURL(file);
-    input.value = '';
+  function populateImageSelect(id, current) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    if (imagePool.length === 0) {
+      sel.innerHTML = '<option value="">— No images in Drive folder —</option>';
+      return;
+    }
+    sel.innerHTML = imagePool.map(function(f) {
+      return '<option value="' + f + '"' + (f === current ? ' selected' : '') + '>' + f + '</option>';
+    }).join('');
   }
 
-  // ======== WELCOME / TITLE PAGE ========
+  function previewImage(slot) {
+    var wrap     = document.getElementById('img-' + slot + '-thumb-wrap');
+    var fileName = valSafe('img-' + slot + '-select');
+    var uri      = fileName && assetUris.images && assetUris.images[fileName];
+
+    wrap.innerHTML = '';
+    if (uri) {
+      var img   = document.createElement('img');
+      img.src   = uri;
+      img.alt   = fileName;
+      wrap.appendChild(img);
+    } else {
+      var span = document.createElement('span');
+      span.className   = 'no-thumb';
+      span.textContent = fileName ? 'Preview loading…' : 'No image selected';
+      wrap.appendChild(span);
+    }
+  }
+
+  function saveImageAssignmentUI(slot) {
+    var fileName = valSafe('img-' + slot + '-select');
+    if (!fileName) { showStatus('error', 'No image selected.'); return; }
+    google.script.run
+      .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
+      .withFailureHandler(function(e) { showStatus('error', e.message); })
+      .saveImageAssignment(slot, fileName);
+  }
+
+  // ============================================================================
+  // Welcome / Title Page
+  // ============================================================================
+
   function renderWelcome(w) {
     document.getElementById('show-title-page').checked = w.showTitlePage;
-    document.getElementById('show-date').checked = w.showDate;
-    document.getElementById('welcome-line1').value = w.line1;
-    document.getElementById('welcome-line2').value = w.line2;
-    document.getElementById('welcome-line3').value = w.line3;
+    document.getElementById('show-date').checked       = w.showDate;
+    document.getElementById('welcome-line1').value     = w.line1;
+    document.getElementById('welcome-line2').value     = w.line2;
+    document.getElementById('welcome-line3').value     = w.line3;
   }
 
   function saveWelcomeToggles() {
@@ -559,88 +853,262 @@
       );
   }
 
-  // ======== FOOTER ========
+  // ============================================================================
+  // Footer
+  // ============================================================================
+
   function renderFooter(f) {
-    document.getElementById('footer-style').value = f.style;
-    document.getElementById('show-running-label').checked = f.showRunningLabel;
-    document.getElementById('running-label-position').value = f.runningLabelPosition;
+    document.getElementById('footer-style').value            = f.style;
+    document.getElementById('show-running-label').checked    = f.showRunningLabel;
+    document.getElementById('running-label-position').value  = f.runningLabelPosition;
   }
 
   function saveFooter() {
-    var obj = {
-      style: val('footer-style'),
-      showRunningLabel: document.getElementById('show-running-label').checked,
-      runningLabelPosition: val('running-label-position')
-    };
     google.script.run
       .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
       .withFailureHandler(function(e) { showStatus('error', e.message); })
-      .saveFooterSettings(obj);
+      .saveFooterSettings({
+        style:                val('footer-style'),
+        showRunningLabel:     document.getElementById('show-running-label').checked,
+        runningLabelPosition: val('running-label-position')
+      });
   }
 
-  // ======== FONT POOL ========
+  // ============================================================================
+  // Asset Pool Rendering
+  // ============================================================================
+
   function renderFontPool() {
     var container = document.getElementById('font-pool-list');
+    if (!container) return;
     if (fontPool.length === 0) {
-      container.innerHTML = '<p style="color:#999;font-size:12px">No fonts found in the spreadsheet folder.</p>';
+      container.innerHTML = '<p style="color:#999;font-size:12px;padding:4px 0">No fonts found in the Drive folder.</p>';
       return;
     }
     container.innerHTML = fontPool.map(function(f) {
-      return '<div style="font-size:12px;padding:2px 0">• ' + f + '</div>';
+      var family    = f.replace(/\.[^.]+$/, '');
+      var hasFont   = assetUris.fonts && assetUris.fonts[f];
+      var sampleStyle = hasFont
+        ? ' style="font-family:\'' + family + '\'; font-size:14px; color:#333;"'
+        : '';
+      var sample = '<span class="asset-preview-sample"' + sampleStyle + '>Aa — Wine &amp; Rosé</span>';
+      return '<div class="asset-pool-item">' +
+        '<span class="asset-icon" style="font-family:monospace;font-size:11px;color:#999">A</span>' +
+        '<span class="asset-name">' + f + '</span>' +
+        sample +
+        '</div>';
     }).join('');
   }
 
-  function uploadFont(input) {
-    if (!input.files.length) return;
-    var file = input.files[0];
-    var reader = new FileReader();
-    reader.onload = function() {
-      var base64 = reader.result.split(',')[1];
-      google.script.run
-        .withSuccessHandler(function(r) {
-          if (r.success) {
-            if (fontPool.indexOf(r.fileName) === -1) fontPool.push(r.fileName);
-            fontPool.sort();
-            renderFontPool();
-            showStatus('success', 'Font uploaded: ' + r.fileName);
-          } else { showStatus('error', r.message); }
-        })
-        .withFailureHandler(function(e) { showStatus('error', e.message); })
-        .saveFontFile(base64, file.name);
-    };
-    reader.readAsDataURL(file);
-    input.value = '';
+  function renderImagePool() {
+    var container = document.getElementById('image-pool-list');
+    if (!container) return;
+    if (imagePool.length === 0) {
+      container.innerHTML = '<p style="color:#999;font-size:12px;padding:4px 0">No images found in the Drive folder.</p>';
+      return;
+    }
+    container.innerHTML = imagePool.map(function(f) {
+      var uri    = assetUris.images && assetUris.images[f];
+      var thumb  = uri
+        ? '<img src="' + uri + '" style="height:20px; max-width:60px; object-fit:contain; vertical-align:middle;">'
+        : '';
+      return '<div class="asset-pool-item">' +
+        '<span class="asset-icon">🖼</span>' +
+        '<span class="asset-name">' + f + '</span>' +
+        '<span>' + thumb + '</span>' +
+        '</div>';
+    }).join('');
   }
 
-  // ======== RESET ========
+  // ============================================================================
+  // Asset Upload (unified — detects font vs image by extension)
+  // ============================================================================
+
+  function handleAssetUpload(input) {
+    if (!input.files || !input.files.length) return;
+    var file    = input.files[0];
+    var ext     = file.name.split('.').pop().toLowerCase();
+    var isFont  = ['otf', 'ttf', 'woff', 'woff2'].indexOf(ext) > -1;
+    var isImage = ['png', 'jpg', 'jpeg', 'svg', 'webp'].indexOf(ext) > -1;
+    input.value = '';
+
+    if (!isFont && !isImage) {
+      showStatus('error', 'Unsupported file type ".' + ext + '". Upload fonts (.otf .ttf .woff .woff2) or images (.png .jpg .svg .webp).');
+      return;
+    }
+
+    document.getElementById('upload-progress').style.display = 'block';
+
+    var reader   = new FileReader();
+    reader.onload = function() {
+      var dataUri  = reader.result;          // full data URI — used client-side for instant preview
+      var base64   = dataUri.split(',')[1];  // raw base64 — sent to server
+
+      if (isFont) {
+        var ext2     = file.name.split('.').pop().toLowerCase();
+        var formatMap = { otf: 'opentype', ttf: 'truetype', woff: 'woff', woff2: 'woff2' };
+        var format   = formatMap[ext2] || 'opentype';
+        var pendingName = file.name;
+        var pendingUri  = dataUri;
+
+        google.script.run
+          .withSuccessHandler(function(r) {
+            document.getElementById('upload-progress').style.display = 'none';
+            if (r.success) {
+              // Update pools and client-side cache
+              fontPool = r.fontPool || fontPool;
+              assetUris.fonts = assetUris.fonts || {};
+              assetUris.fonts[pendingName] = { uri: pendingUri, format: format };
+              // Inject the new @font-face rule immediately
+              addFontFace(pendingName, pendingUri, format);
+              // Refresh all font dropdowns and pool list
+              refreshAllFontSelects();
+              renderFontPool();
+              showStatus('success', '"' + r.fileName + '" uploaded and available in all font dropdowns.');
+            } else {
+              showStatus('error', r.message);
+            }
+          })
+          .withFailureHandler(function(e) {
+            document.getElementById('upload-progress').style.display = 'none';
+            showStatus('error', e.message);
+          })
+          .saveFontFile(base64, file.name);
+
+      } else {
+        var pendingNameImg = file.name;
+        var pendingUriImg  = dataUri;
+
+        google.script.run
+          .withSuccessHandler(function(r) {
+            document.getElementById('upload-progress').style.display = 'none';
+            if (r.success) {
+              // Update pools and client-side cache
+              imagePool = r.imagePool || imagePool;
+              assetUris.images = assetUris.images || {};
+              assetUris.images[pendingNameImg] = pendingUriImg;
+              // Refresh image dropdowns and pool list
+              refreshImageSelects();
+              renderImagePool();
+              showStatus('success', '"' + r.fileName + '" uploaded and available in image selectors.');
+            } else {
+              showStatus('error', r.message);
+            }
+          })
+          .withFailureHandler(function(e) {
+            document.getElementById('upload-progress').style.display = 'none';
+            showStatus('error', e.message);
+          })
+          .uploadImageFile(base64, file.name);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ============================================================================
+  // Drop Zone
+  // ============================================================================
+
+  (function() {
+    var zone = document.getElementById('asset-drop-zone');
+    zone.addEventListener('click', function() {
+      document.getElementById('asset-upload-input').click();
+    });
+    zone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      zone.classList.add('dragover');
+    });
+    zone.addEventListener('dragleave', function() {
+      zone.classList.remove('dragover');
+    });
+    zone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        // Simulate the file input change path
+        var fakeInput = { files: e.dataTransfer.files, value: '' };
+        handleAssetUpload(fakeInput);
+      }
+    });
+  })();
+
+  // ============================================================================
+  // Pool Refresh Helpers
+  // ============================================================================
+
+  /** Refreshes every font <select> in the dialog, preserving current selections. */
+  function refreshAllFontSelects() {
+    document.querySelectorAll('select[id$="-font"]').forEach(function(sel) {
+      var current = sel.value;
+      sel.innerHTML = fontPool.map(function(f) {
+        return '<option value="' + f + '"' + (f === current ? ' selected' : '') + '>' + f + '</option>';
+      }).join('');
+      // If previously-selected font is still in pool, it stays selected
+    });
+  }
+
+  /** Refreshes both image assignment selects, preserving current selections. */
+  function refreshImageSelects() {
+    ['logo', 'footer'].forEach(function(slot) {
+      var sel = document.getElementById('img-' + slot + '-select');
+      if (!sel) return;
+      var current = sel.value;
+      sel.innerHTML = imagePool.map(function(f) {
+        return '<option value="' + f + '"' + (f === current ? ' selected' : '') + '>' + f + '</option>';
+      }).join('');
+    });
+  }
+
+  // ============================================================================
+  // Reset
+  // ============================================================================
+
   function resetAll() {
     if (!confirm('Reset ALL settings to the current brand defaults? This cannot be undone.')) return;
     google.script.run
       .withSuccessHandler(function(r) {
-        showStatus('success', r.message);
-        google.script.run.withSuccessHandler(initSettings).getAllSettings();
+        showStatus(r.success ? 'success' : 'error', r.message);
+        if (r.success) google.script.run.withSuccessHandler(_reInitSettings).getAllSettings();
       })
       .withFailureHandler(function(e) { showStatus('error', e.message); })
       .resetAllDefaults();
   }
 
-  // ======== HELPERS ========
-  function val(id) { return document.getElementById(id).value; }
+  // ============================================================================
+  // Helpers
+  // ============================================================================
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+
+  /** Like val() but returns empty string rather than throwing if element missing. */
+  function valSafe(id) {
+    var el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+
+  function populateSelect(id, options, current) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = options.map(function(o) {
+      return '<option value="' + o + '"' + (o === current ? ' selected' : '') + '>' + o + '</option>';
+    }).join('');
+  }
 
   function populateFontSelect(id, current) {
-    var sel = document.getElementById(id);
-    sel.innerHTML = fontPool.map(function(f) {
-      var s = (f === current) ? ' selected' : '';
-      return '<option value="' + f + '"' + s + '>' + f + '</option>';
-    }).join('');
+    populateSelect(id, fontPool, current);
   }
 
   function showStatus(type, message) {
     var el = document.getElementById('status');
-    el.className = 'status ' + type;
+    el.className   = 'status ' + type;
     el.textContent = message;
     if (type === 'success') {
-      setTimeout(function() { if (el.classList.contains('success')) el.style.display = 'none'; }, 3000);
+      setTimeout(function() {
+        if (el.classList.contains('success')) el.style.display = 'none';
+      }, 3500);
     }
   }
 </script>
