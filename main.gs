@@ -21,6 +21,7 @@ function onOpen() {
   ui.createMenu('Inventory Tools')
     .addItem('Update Purchases', 'showPurchaseDateDialog')
     .addItem('Upload Variance Data (.csv)', 'showVarianceUploadDialog')
+    .addItem('Upload Toast Pricing (.csv)', 'showToastPricingDialog')
     .addSeparator()
     .addItem('Sync Section Codes', 'syncSectionCodes')
     .addSeparator()
@@ -195,6 +196,12 @@ function showVarianceUploadDialog() {
   var html = HtmlService.createHtmlOutputFromFile('VarianceUploadDialog')
     .setWidth(400).setHeight(250);
   SpreadsheetApp.getUi().showModalDialog(html, 'Upload Variance Data');
+}
+
+function showToastPricingDialog() {
+  var html = HtmlService.createHtmlOutputFromFile('ToastPricingUploadDialog')
+    .setWidth(440).setHeight(280);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Upload Toast Pricing');
 }
 
 function showFeedUploadDialog() {
