@@ -341,6 +341,146 @@ function clearCountColumn(sheet) {
 }
 
 // ============================================================================
+// Toast Pricing CSV
+// ============================================================================
+
+/**
+ * Processes a Toast pricing CSV export and updates Data column B (Name/Price).
+ * Called from ToastPricingUploadDialog.html.
+ *
+ * Rows are included only when:
+ *   - Archived = "No"
+ *   - Modifier = "No"
+ *   - Name starts with "BTL "
+ *
+ * The "BTL " prefix is stripped before matching against Data!A2:A.
+ * Data!B2:B is cleared first; duplicate matches within the file are
+ * flagged and returned to the user for investigation.
+ *
+ * @param {string} csvContent Raw CSV content as string.
+ * @returns {Object} { success, message, duplicates: string[] }
+ */
+function processToastPricingCSV(csvContent) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dataSheet = ss.getSheetByName(SHEETS.DATA);
+
+  if (!dataSheet) {
+    return { success: false, message: 'Error: Sheet "Data" not found.', duplicates: [] };
+  }
+
+  try {
+    const csvData = Utilities.parseCsv(csvContent);
+    if (csvData.length < 2) {
+      return { success: true, message: 'File is empty or contains only headers.', duplicates: [] };
+    }
+
+    // ── Validate required columns ─────────────────────────────────────────
+    const csvHeaders     = csvData[0];
+    const requiredCols   = Object.keys(TOAST_PRICING_HEADER_MAP);
+    const missingColumns = requiredCols.filter(h => !csvHeaders.includes(h));
+    if (missingColumns.length > 0) {
+      return {
+        success:    false,
+        message:    'Uploaded file is missing required columns: ' + missingColumns.join(', '),
+        duplicates: []
+      };
+    }
+
+    const nameIdx      = csvHeaders.indexOf('Name');
+    const priceIdx     = csvHeaders.indexOf('Base Price');
+    const archivedIdx  = csvHeaders.indexOf('Archived');
+    const modifierIdx  = csvHeaders.indexOf('Modifier');
+
+    // ── Load Data!A and reset Data!B ─────────────────────────────────────
+    const lastRow = dataSheet.getLastRow();
+    if (lastRow < 2) {
+      return { success: true, message: 'Data sheet has no data rows.', duplicates: [] };
+    }
+
+    const numRows      = lastRow - 1;
+    const itemColValues = dataSheet.getRange(2, 1, numRows, 1).getValues(); // A2:A
+
+    // Clear column B now
+    dataSheet.getRange(2, 2, numRows, 1).clearContent();
+
+    // Build a lookup map: lowercase item name → 0-based row index into itemColValues
+    const itemIndex = {};
+    itemColValues.forEach(function(row, i) {
+      const key = (row[0] || '').toString().trim().toLowerCase();
+      if (key) itemIndex[key] = i;
+    });
+
+    // Working array for column B output (parallel to itemColValues)
+    const outputB = new Array(numRows).fill('');
+
+    // ── Process CSV rows ──────────────────────────────────────────────────
+    let updated    = 0;
+    const duplicates = [];
+    const notFound   = [];
+
+    for (let r = 1; r < csvData.length; r++) {
+      const row = csvData[r];
+      if (!row || row.length < csvHeaders.length) continue;
+
+      const archived = (row[archivedIdx]  || '').toString().trim();
+      const modifier = (row[modifierIdx]  || '').toString().trim();
+      const rawName  = (row[nameIdx]       || '').toString().trim();
+
+      // Apply filters
+      if (archived.toLowerCase() !== 'no')   continue;
+      if (modifier.toLowerCase() !== 'no')   continue;
+      if (!rawName.startsWith('BTL '))        continue;
+
+      const strippedName = rawName.substring(4).trim(); // remove "BTL "
+      const lookupKey    = strippedName.toLowerCase();
+      const rawPrice     = (row[priceIdx]  || '').toString().trim();
+
+      if (!(lookupKey in itemIndex)) {
+        notFound.push(strippedName);
+        continue;
+      }
+
+      const idx = itemIndex[lookupKey];
+
+      if (outputB[idx] !== '') {
+        // Slot already written in this run — record both the previous value
+        // and the current one so the user can see what's conflicting
+        duplicates.push(
+          '"' + strippedName + '" — previous: ' + outputB[idx] + ', new: ' + rawPrice
+        );
+        outputB[idx] = rawPrice; // overwrite with latest; user can investigate
+      } else {
+        outputB[idx] = rawPrice;
+        updated++;
+      }
+    }
+
+    // ── Write column B back in one batch ─────────────────────────────────
+    const writeRange = dataSheet.getRange(2, 2, numRows, 1);
+    writeRange.setValues(outputB.map(function(v) { return [v]; }));
+
+    // ── Build result message ──────────────────────────────────────────────
+    let message = 'Upload Complete.\n\nItems Updated: ' + updated;
+
+    if (notFound.length > 0) {
+      message += '\nNot Matched in Data: ' + notFound.length;
+    }
+
+    if (duplicates.length > 0) {
+      message += '\n\n⚠️ Duplicates found: ' + duplicates.length +
+                 '\nThese items appeared more than once in the file. ' +
+                 'See the list below for details.';
+    }
+
+    return { success: true, message, duplicates, notFound };
+
+  } catch (e) {
+    Logger.log('Toast pricing processing error: ' + e);
+    return { success: false, message: 'Error: ' + e.message, duplicates: [] };
+  }
+}
+
+// ============================================================================
 // Feed Import (.atomsvc)
 // ============================================================================
 
