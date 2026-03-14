@@ -258,6 +258,13 @@ const VARIANCE_HEADER_MAP = {
   'Item Category 3': 'Category3'
 };
 
+const TOAST_PRICING_HEADER_MAP = {
+  'Name':       'Name',
+  'Base Price': 'BasePrice',
+  'Archived':   'Archived',
+  'Modifier':   'Modifier'
+};
+
 const DATA_SHEET_HEADERS = [
   'Item', 'Name', 'Section', 'Vintage', 'MenuPrice', 'Bin', 'Cost',
   'UofM', 'StorageLocation', 'NewPrice', 'ToastPrice', 'Count',
