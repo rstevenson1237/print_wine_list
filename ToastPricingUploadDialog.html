@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      color: #333;
+      padding: 20px;
+      background: #fff;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #777;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .drop-zone {
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: #4285f4;
+      background: #f0f6ff;
+    }
+
+    .drop-zone.hidden { display: none; }
+
+    .drop-icon { font-size: 28px; margin-bottom: 6px; }
+
+    .drop-label {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .browse-btn {
+      font-size: 12px;
+      padding: 5px 14px;
+      border: 1px solid #4285f4;
+      border-radius: 4px;
+      background: #fff;
+      color: #4285f4;
+      cursor: pointer;
+    }
+
+    .browse-btn:hover { background: #e8f0fe; }
+
+    #fileInput { display: none; }
+
+    .file-name {
+      font-size: 11px;
+      color: #555;
+      font-style: italic;
+      min-height: 16px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .status {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      min-height: 32px;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      display: none;
+    }
+
+    .status.loading { display: block; background: #f0f6ff; color: #1a73e8; }
+    .status.success { display: block; background: #e6f4ea; color: #1e7e34; }
+    .status.error   { display: block; background: #fce8e6; color: #c5221f; }
+    .status.warning { display: block; background: #fef7e0; color: #7a5000; }
+
+    .duplicate-list {
+      margin-top: 10px;
+      font-size: 11px;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 4px;
+      padding: 8px 10px;
+      display: none;
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      color: #5d4000;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    button {
+      font-size: 13px;
+      padding: 7px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      background: #f1f3f4;
+      color: #333;
+    }
+
+    button:hover { background: #e2e5e9; }
+
+    button.primary {
+      background: #4285f4;
+      color: #fff;
+      border-color: #4285f4;
+    }
+
+    button.primary:hover { background: #3367d6; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <h3>Upload Toast Pricing</h3>
+  <p class="subtitle">
+    CSV must include: <strong>Name, Base Price, Archived, Modifier</strong>.<br>
+    Rows with <em>Archived = No</em>, <em>Modifier = No</em>, and names starting
+    with <strong>BTL&nbsp;</strong> will update Data column B.
+  </p>
+
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="drop-icon">📂</div>
+    <div class="drop-label">Drag &amp; drop your CSV here, or</div>
+    <button class="browse-btn" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Browse…</button>
+  </div>
+
+  <input type="file" id="fileInput" accept=".csv">
+  <div class="file-name" id="fileName">No file selected</div>
+
+  <div class="status" id="status"></div>
+  <div class="duplicate-list" id="duplicateList"></div>
+
+  <div class="buttons">
+    <button onclick="google.script.host.close()">Cancel</button>
+    <button class="primary" id="actionBtn" onclick="handleAction()" disabled>Upload</button>
+  </div>
+
+  <script>
+    const fileInput     = document.getElementById('fileInput');
+    const dropZone      = document.getElementById('dropZone');
+    const actionBtn     = document.getElementById('actionBtn');
+    const fileName      = document.getElementById('fileName');
+    const statusEl      = document.getElementById('status');
+    const duplicateList = document.getElementById('duplicateList');
+
+    let selectedFile = null;
+    let isComplete   = false;
+
+    fileInput.addEventListener('change', function(e) {
+      handleFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFile(e.dataTransfer.files[0]);
+    });
+
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.name.endsWith('.csv')) {
+        showStatus('error', 'Please select a CSV file.');
+        return;
+      }
+      selectedFile = file;
+      fileName.textContent = file.name;
+      actionBtn.disabled = false;
+      statusEl.className = 'status';
+      duplicateList.style.display = 'none';
+    }
+
+    function handleAction() {
+      if (isComplete) {
+        google.script.host.close();
+        return;
+      }
+      uploadFile();
+    }
+
+    function uploadFile() {
+      if (!selectedFile) return;
+
+      showStatus('loading', 'Processing Toast pricing data…');
+      actionBtn.disabled = true;
+      actionBtn.textContent = 'Working…';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        google.script.run
+          .withSuccessHandler(handleSuccess)
+          .withFailureHandler(handleError)
+          .processToastPricingCSV(e.target.result);
+      };
+      reader.readAsText(selectedFile);
+    }
+
+    function handleSuccess(result) {
+      dropZone.classList.add('hidden');
+      isComplete = true;
+      actionBtn.disabled = false;
+      actionBtn.textContent = 'Close';
+
+      if (result.success) {
+        const hasDupes = result.duplicates && result.duplicates.length > 0;
+        showStatus(hasDupes ? 'warning' : 'success', result.message);
+
+        if (hasDupes) {
+          duplicateList.style.display = 'block';
+          duplicateList.textContent =
+            '⚠️ Duplicate items — investigate in source file:\n' +
+            result.duplicates.map(function(d, i) {
+              return (i + 1) + '. ' + d;
+            }).join('\n');
+        }
+      } else {
+        showStatus('error', result.message);
+      }
+    }
+
+    function handleError(error) {
+      showStatus('error', 'Error: ' + error.message);
+      actionBtn.disabled = false;
+      actionBtn.textContent = 'Retry';
+      isComplete = false;
+    }
+
+    function showStatus(type, message) {
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = message;
+    }
+  </script>
+</body>
+</html>
