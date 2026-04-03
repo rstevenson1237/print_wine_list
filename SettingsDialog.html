@@ -378,6 +378,7 @@
   var alignOptions   = ['left', 'center', 'right'];
   var weightOptions  = ['normal', 'bold'];
   var transformOpts  = ['none', 'uppercase', 'lowercase'];
+  var variantOpts = ['normal', 'small-caps'];
   var underlineOpts  = ['none', 'text', 'partial', 'full'];
   var subtextPosOpts = ['below', 'inline'];
 
@@ -479,19 +480,22 @@
   function updatePreview(type) {
     var el = document.getElementById('preview-t' + type);
     if (!el) return;
-    var pre    = 'hs-' + type + '-title-';
-    var font   = valSafe(pre + 'font');
-    var size   = valSafe(pre + 'size');
-    var color  = valSafe(pre + 'color') || valSafe(pre + 'color-pick');
-    var weight = valSafe(pre + 'weight');
-    var xform  = valSafe(pre + 'transform');
+    var pre     = 'hs-' + type + '-title-';
+    var font    = valSafe(pre + 'font');
+    var size    = valSafe(pre + 'size');
+    var color   = valSafe(pre + 'color') || valSafe(pre + 'color-pick');
+    var weight  = valSafe(pre + 'weight');
+    var xform   = valSafe(pre + 'transform');
+    var variant = valSafe(pre + 'variant') || 'normal';
     if (!font) return;
     var family = font.replace(/\.[^.]+$/, '');
     el.style.fontFamily    = '"' + family + '"';
     el.style.fontSize      = (size || '14') + 'pt';
-    el.style.color         = color  || '#333';
-    el.style.fontWeight    = weight || 'normal';
-    el.style.textTransform = xform  || 'none';
+    el.style.color         = color   || '#333';
+    el.style.fontWeight    = weight  || 'normal';
+    el.style.textTransform = xform   || 'none';
+    // Only apply small-caps when transform isn't overriding case anyway
+    el.style.fontVariant   = (variant !== 'normal' && xform === 'none') ? variant : 'normal';
   }
 
   function updateWinePreview() {
@@ -657,6 +661,7 @@
       '<div class="row">' +
         '<label>Spacing</label><input type="number" id="' + p + 'spacing" value="' + s.spacing + '" min="0" max="20" step="0.5">' +
         '<label>Underline</label>' + buildSelect(p + 'underline', underlineOpts, s.underline) +
+        '<label>Variant</label>'   + buildSelect(p + 'variant',   variantOpts,   s.variant || 'normal', 'updatePreview(' + type + ')') +
       '</div>'
     );
   }
@@ -686,7 +691,7 @@
   }
 
   function saveHeading(type) {
-    var pre     = 'hs-' + type + '-';
+    var pre      = 'hs-' + type + '-';
     var styleObj = {
       title: {
         font:      val(pre + 'title-font'),
@@ -696,7 +701,8 @@
         weight:    val(pre + 'title-weight'),
         transform: val(pre + 'title-transform'),
         spacing:   val(pre + 'title-spacing'),
-        underline: val(pre + 'title-underline')
+        underline: val(pre + 'title-underline'),
+        variant:   val(pre + 'title-variant')
       },
       subtext: {
         font:     val(pre + 'sub-font'),
