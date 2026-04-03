@@ -70,14 +70,14 @@ const BRAND_PRESETS = {
       sizePreset: 'Bygone (8 × 13)',
       width: 8,
       height: 13,
-      marginTop: 0.75,
-      marginBottom: 1.0,
-      marginInner: 1.25,
-      marginOuter: 0.75,
+      marginTop:    0.75,  // unchanged — matches InDesign A-Master
+      marginBottom: 0.5,   // was 1.0  — InDesign uses 0.5"
+      marginInner:  0.5,   // was 1.25 — InDesign inner is the tight gutter side
+      marginOuter:  1.0,   // was 0.75 — InDesign outer is the generous thumb margin
       pageBuffer: 100
     },
     colors: {
-      primary: '#B88500',
+      primary: '#B88800',  // was #B88500 — closer CMYK-to-sRGB conversion of C10 M35 Y100 K20
       text: '#333333'
     },
     images: {
@@ -93,29 +93,33 @@ const BRAND_PRESETS = {
     },
     headingStyles: {
       1: {
-        title:   { font: 'Minerva Bold.otf', size: 28, color: '#B88500', align: 'center', weight: 'normal', transform: 'uppercase', spacing: 2, underline: 'none' },
-        subtext: { font: 'ApexNew-Book.otf',  size: 14, color: '#333333', weight: 'normal', position: 'below' }
+        // Wine Type / Style — Cormier display font, gold, centered
+        title:   { font: 'Cormier-Regular.otf', size: 20, color: '#B88800', align: 'center', weight: 'normal', transform: 'uppercase', spacing: 2, underline: 'none', variant: 'normal' },
+        subtext: { font: 'ApexNew-Book.otf',     size: 14, color: '#333333', weight: 'normal', position: 'below' }
       },
       2: {
-        title:   { font: 'Minerva Bold.otf', size: 22, color: '#B88500', align: 'left', weight: 'normal', transform: 'none', spacing: 0, underline: 'none' },
-        subtext: { font: 'ApexNew-Book.otf',  size: 12, color: '#333333', weight: 'normal', position: 'below' }
+        // Country — Minerva Regular, gold, left-aligned
+        title:   { font: 'Minerva Regular.otf', size: 22, color: '#B88800', align: 'left', weight: 'normal', transform: 'none', spacing: 0, underline: 'none', variant: 'normal' },
+        subtext: { font: 'ApexNew-Book.otf',     size: 12, color: '#333333', weight: 'normal', position: 'below' }
       },
       3: {
-        title:   { font: 'ApexSansBoldST.ttf', size: 14, color: '#B88500', align: 'left', weight: 'bold', transform: 'none', spacing: 0, underline: 'partial' },
+        // Region — Apex Sans, dark gray, small-caps
+        title:   { font: 'ApexSansBoldST.ttf', size: 14, color: '#555555', align: 'left', weight: 'bold', transform: 'none', spacing: 1, underline: 'partial', variant: 'small-caps' },
         subtext: { font: 'ApexNew-Book.otf',    size: 11, color: '#333333', weight: 'normal', position: 'inline' }
       },
       4: {
-        title:   { font: 'ApexSansBoldST.ttf', size: 12, color: '#000000', align: 'left', weight: 'bold', transform: 'none', spacing: 0, underline: 'text' },
+        // Appellation — Apex Sans, all-caps, wide tracking, smaller
+        title:   { font: 'ApexSansBoldST.ttf', size: 9, color: '#000000', align: 'left', weight: 'bold', transform: 'uppercase', spacing: 5, underline: 'text', variant: 'normal' },
         subtext: { font: 'ApexNew-Book.otf',    size: 10, color: '#333333', weight: 'normal', position: 'inline' }
       }
     },
     wineEntry: {
-      font: 'ApexNew-Book.otf', size: 13, color: '#333333', weight: 'normal', style: 'normal'
+      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal'  // was size: 13
     },
     footer: {
-      style: 'image',           // 'image' = decorative footer image | 'rule' = thin line + icon
+      style: 'image',
       showRunningLabel: true,
-      runningLabelPosition: 'header'  // 'header' = top outer corner | 'footer' = bottom alongside page number
+      runningLabelPosition: 'header'
     },
     frontMatterPages: 2
   },
