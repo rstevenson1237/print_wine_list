@@ -344,21 +344,22 @@ function getHeadingStyle(type) {
 
   return {
     title: {
-      font:      p.getProperty(headingKey_(type, 'TITLE', 'FONT'))                        || d.title.font,
-      size:      parseInt(p.getProperty(headingKey_(type, 'TITLE', 'SIZE')))              || d.title.size,
-      color:     p.getProperty(headingKey_(type, 'TITLE', 'COLOR'))                       || d.title.color,
-      align:     p.getProperty(headingKey_(type, 'TITLE', 'ALIGN'))                       || d.title.align,
-      weight:    p.getProperty(headingKey_(type, 'TITLE', 'WEIGHT'))                      || d.title.weight,
-      transform: p.getProperty(headingKey_(type, 'TITLE', 'TRANSFORM'))                   || d.title.transform,
-      spacing:   parseFloat(p.getProperty(headingKey_(type, 'TITLE', 'SPACING')))         || d.title.spacing,
-      underline: p.getProperty(headingKey_(type, 'TITLE', 'UNDERLINE'))                   || d.title.underline
+      font:      p.getProperty(headingKey_(type, 'TITLE', 'FONT'))                || d.title.font,
+      size:      parseInt(p.getProperty(headingKey_(type, 'TITLE', 'SIZE')))      || d.title.size,
+      color:     p.getProperty(headingKey_(type, 'TITLE', 'COLOR'))               || d.title.color,
+      align:     p.getProperty(headingKey_(type, 'TITLE', 'ALIGN'))               || d.title.align,
+      weight:    p.getProperty(headingKey_(type, 'TITLE', 'WEIGHT'))              || d.title.weight,
+      transform: p.getProperty(headingKey_(type, 'TITLE', 'TRANSFORM'))           || d.title.transform,
+      spacing:   parseFloat(p.getProperty(headingKey_(type, 'TITLE', 'SPACING'))) || d.title.spacing,
+      underline: p.getProperty(headingKey_(type, 'TITLE', 'UNDERLINE'))           || d.title.underline,
+      variant:   p.getProperty(headingKey_(type, 'TITLE', 'VARIANT'))             || d.title.variant || 'normal'
     },
     subtext: {
-      font:     p.getProperty(headingKey_(type, 'SUB', 'FONT'))                           || d.subtext.font,
-      size:     parseInt(p.getProperty(headingKey_(type, 'SUB', 'SIZE')))                 || d.subtext.size,
-      color:    p.getProperty(headingKey_(type, 'SUB', 'COLOR'))                          || d.subtext.color,
-      weight:   p.getProperty(headingKey_(type, 'SUB', 'WEIGHT'))                         || d.subtext.weight,
-      position: p.getProperty(headingKey_(type, 'SUB', 'POSITION'))                       || d.subtext.position
+      font:     p.getProperty(headingKey_(type, 'SUB', 'FONT'))                   || d.subtext.font,
+      size:     parseInt(p.getProperty(headingKey_(type, 'SUB', 'SIZE')))         || d.subtext.size,
+      color:    p.getProperty(headingKey_(type, 'SUB', 'COLOR'))                  || d.subtext.color,
+      weight:   p.getProperty(headingKey_(type, 'SUB', 'WEIGHT'))                 || d.subtext.weight,
+      position: p.getProperty(headingKey_(type, 'SUB', 'POSITION'))               || d.subtext.position
     }
   };
 }
