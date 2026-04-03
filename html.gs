@@ -60,6 +60,13 @@ function generateHTMLHead(assets, brand) {
     var titleFont = ts.font.replace(/\.[^.]+$/, '');
     var subFont   = ss.font.replace(/\.[^.]+$/, '');
 
+    // font-variant and text-transform are mutually exclusive in practice:
+    // uppercase overrides small-caps rendering, so only emit font-variant
+    // when transform is not forcing a case change.
+    var fontVariant = (ts.variant && ts.variant !== 'normal' && ts.transform === 'none')
+      ? ts.variant
+      : 'normal';
+
     headingCSS += '\n        .heading-type-' + t + ' {\n' +
       '            font-family: \'' + titleFont + '\', \'Georgia\', serif;\n' +
       '            font-size: ' + ts.size + 'px;\n' +
@@ -67,6 +74,8 @@ function generateHTMLHead(assets, brand) {
       '            text-align: ' + ts.align + ';\n' +
       '            font-weight: ' + ts.weight + ';\n' +
       '            text-transform: ' + ts.transform + ';\n' +
+      '            font-variant: ' + fontVariant + ';\n' +
+      '            font-variant-caps: ' + fontVariant + ';\n' +
       '            letter-spacing: ' + ts.spacing + 'px;\n' +
       '            margin: ' + Math.round(ts.size * 0.7) + 'px 0 ' + Math.round(ts.size * 0.4) + 'px 0;\n' +
       '            page-break-after: avoid;\n' +
