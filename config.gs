@@ -42,6 +42,7 @@ const PAGE_SIZE_PRESETS = {
   'Half Letter (5.5 × 8.5)':  { width: 5.5,  height: 8.5  },
   'Small Book (6 × 8.5)':     { width: 6,    height: 8.5  },
   'Bygone (8 × 13)':          { width: 8,    height: 13   },
+  'Ruxton (8 × 13)':          { width: 8,    height: 13   },
   'US Letter (8.5 × 11)':     { width: 8.5,  height: 11   },
   'Large Book (9 × 13)':      { width: 9,    height: 13   }
 };
@@ -70,14 +71,14 @@ const BRAND_PRESETS = {
       sizePreset: 'Bygone (8 × 13)',
       width: 8,
       height: 13,
-      marginTop:    0.75,  // unchanged — matches InDesign A-Master
-      marginBottom: 0.5,   // was 1.0  — InDesign uses 0.5"
-      marginInner:  0.5,   // was 1.25 — InDesign inner is the tight gutter side
-      marginOuter:  1.0,   // was 0.75 — InDesign outer is the generous thumb margin
+      marginTop:    0.75,
+      marginBottom: 0.5,
+      marginInner:  0.5,
+      marginOuter:  1.0,
       pageBuffer: 100
     },
     colors: {
-      primary: '#B88800',  // was #B88500 — closer CMYK-to-sRGB conversion of C10 M35 Y100 K20
+      primary: '#B88800',
       text: '#333333'
     },
     images: {
@@ -93,28 +94,24 @@ const BRAND_PRESETS = {
     },
     headingStyles: {
       1: {
-        // Wine Type / Style — Cormier display font, gold, centered
         title:   { font: 'Cormier-Regular.otf', size: 20, color: '#B88800', align: 'center', weight: 'normal', transform: 'uppercase', spacing: 2, underline: 'none', variant: 'normal' },
         subtext: { font: 'ApexNew-Book.otf',     size: 14, color: '#333333', weight: 'normal', position: 'below' }
       },
       2: {
-        // Country — Minerva Regular, gold, left-aligned
         title:   { font: 'Minerva Regular.otf', size: 22, color: '#B88800', align: 'left', weight: 'normal', transform: 'none', spacing: 0, underline: 'none', variant: 'normal' },
         subtext: { font: 'ApexNew-Book.otf',     size: 12, color: '#333333', weight: 'normal', position: 'below' }
       },
       3: {
-        // Region — Apex Sans, dark gray, small-caps
         title:   { font: 'ApexSansBoldST.ttf', size: 14, color: '#555555', align: 'left', weight: 'bold', transform: 'none', spacing: 1, underline: 'partial', variant: 'small-caps' },
         subtext: { font: 'ApexNew-Book.otf',    size: 11, color: '#333333', weight: 'normal', position: 'inline' }
       },
       4: {
-        // Appellation — Apex Sans, all-caps, wide tracking, smaller
         title:   { font: 'ApexSansBoldST.ttf', size: 9, color: '#000000', align: 'left', weight: 'bold', transform: 'uppercase', spacing: 5, underline: 'text', variant: 'normal' },
         subtext: { font: 'ApexNew-Book.otf',    size: 10, color: '#333333', weight: 'normal', position: 'inline' }
       }
     },
     wineEntry: {
-      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal'  // was size: 13
+      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal'
     },
     footer: {
       style: 'image',
@@ -127,17 +124,17 @@ const BRAND_PRESETS = {
   RUXTON: {
     label: 'Ruxton',
     page: {
-      sizePreset: 'US Letter (8.5 × 11)',
-      width: 8.5,
-      height: 11,
-      marginTop: 0.6,
-      marginBottom: 0.75,
-      marginInner: 1.0,
-      marginOuter: 0.75,
+      sizePreset: 'Ruxton (8 × 13)',  // item 2
+      width: 8,                        // item 2
+      height: 13,                      // item 2
+      marginTop:    0.5,               // item 4 (was 0.6)
+      marginBottom: 0.5,               // item 4 (was 0.75)
+      marginInner:  1.0,               // unchanged
+      marginOuter:  0.5,               // item 4 (was 0.75)
       pageBuffer: 80
     },
     colors: {
-      primary: '#3B5F3B',
+      primary: '#2D4A1E',              // item 1 (was #3B5F3B)
       text: '#222222'
     },
     images: {
@@ -153,19 +150,27 @@ const BRAND_PRESETS = {
     },
     headingStyles: {
       1: {
-        title:   { font: 'Ruxton-Heading.otf', size: 32, color: '#3B5F3B', align: 'center', weight: 'normal', transform: 'none', spacing: 1, underline: 'none' },
-        subtext: { font: 'Ruxton-Body.otf',    size: 14, color: '#222222', weight: 'normal', position: 'below' }
+        // Page Header — script display font, brand green, centered, generous spacing
+        title:   { font: 'Ruxton-Heading.otf', size: 39, color: '#2D4A1E', align: 'center', weight: 'normal', transform: 'none', spacing: 1, underline: 'none', variant: 'normal', spaceBefore: 50, spaceAfter: 32 },
+        // items 1 (color), 3 (size), 9 (spaceBefore/spaceAfter)
+        subtext: { font: 'Ruxton-Body.otf', size: 14, color: '#222222', weight: 'normal', position: 'below' }
       },
       2: {
-        title:   { font: 'Ruxton-Heading.otf', size: 16, color: '#3B5F3B', align: 'left', weight: 'bold', transform: 'uppercase', spacing: 1, underline: 'none' },
-        subtext: { font: 'Ruxton-Body.otf',    size: 11, color: '#555555', weight: 'normal', position: 'below' }
+        // Country / Wine Color — display font, centered, all-caps
+        title:   { font: 'Ruxton-Heading.otf', size: 22, color: '#2D4A1E', align: 'center', weight: 'normal', transform: 'uppercase', spacing: 1, underline: 'none', variant: 'normal', spaceBefore: 28, spaceAfter: 9 },
+        // items 1 (color), 5 (align), 6 (size), 9 (spaceBefore/spaceAfter)
+        subtext: { font: 'Ruxton-Body.otf', size: 11, color: '#555555', weight: 'normal', position: 'below' }
       },
       3: {
-        title:   { font: 'Ruxton-Body.otf', size: 13, color: '#3B5F3B', align: 'left', weight: 'bold', transform: 'uppercase', spacing: 0.5, underline: 'full' },
+        // Wine Type category label — brand green, wide tracking, generous space above
+        title:   { font: 'Ruxton-Body.otf', size: 13, color: '#2D4A1E', align: 'left', weight: 'bold', transform: 'uppercase', spacing: 0.5, underline: 'none', variant: 'normal', spaceBefore: 36, spaceAfter: 0 },
+        // items 1 (color), 7 (underline none), 9 (spaceBefore/spaceAfter)
         subtext: { font: 'Ruxton-Body.otf', size: 10, color: '#555555', weight: 'normal', position: 'below' }
       },
       4: {
-        title:   { font: 'Ruxton-Body.otf', size: 11, color: '#222222', align: 'left', weight: 'bold', transform: 'none', spacing: 0, underline: 'text' },
+        // Specific type / appellation — body font, subtle
+        title:   { font: 'Ruxton-Body.otf', size: 11, color: '#222222', align: 'left', weight: 'bold', transform: 'none', spacing: 0, underline: 'text', variant: 'normal', spaceBefore: 14, spaceAfter: 5 },
+        // item 9 (spaceBefore/spaceAfter)
         subtext: { font: 'Ruxton-Body.otf', size: 10, color: '#555555', weight: 'normal', position: 'inline' }
       }
     },
@@ -179,6 +184,7 @@ const BRAND_PRESETS = {
     },
     frontMatterPages: 2
   }
+
 };
 
 /**
@@ -193,27 +199,29 @@ function getBrandPresetNames() {
 // ============================================================================
 
 /**
- * Returns the active page configuration, reading from stored settings
+ * Returns the active page configuration, reading from DocumentProperties
  * with fallback to the active brand preset or hard-coded defaults.
  *
+ * @param {Object} [allProps]  Optional pre-fetched DocumentProperties object.
+ * @param {Object} [preset]    Optional pre-resolved brand preset.
  * @returns {Object} Page configuration with computed helper methods.
  */
-function getPageConfig() {
-  var p = PropertiesService.getUserProperties();
-  var brandName = p.getProperty('BRAND_NAME') || 'BYGONE';
-  var preset = BRAND_PRESETS[brandName] || BRAND_PRESETS.BYGONE;
-  var defaults = preset.page;
+function getPageConfig(allProps, preset) {
+  // FIX: was getUserProperties() — must be DocumentProperties so all managers
+  // at a property share the same page dimensions rather than each having their own.
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
 
   var config = {
-    WIDTH:         parseFloat(p.getProperty('PAGE_WIDTH'))         || defaults.width,
-    HEIGHT:        parseFloat(p.getProperty('PAGE_HEIGHT'))        || defaults.height,
-    MARGIN_TOP:    parseFloat(p.getProperty('PAGE_MARGIN_TOP'))    || defaults.marginTop,
-    MARGIN_BOTTOM: parseFloat(p.getProperty('PAGE_MARGIN_BOTTOM')) || defaults.marginBottom,
-    MARGIN_INNER:  parseFloat(p.getProperty('PAGE_MARGIN_INNER'))  || defaults.marginInner,
-    MARGIN_OUTER:  parseFloat(p.getProperty('PAGE_MARGIN_OUTER'))  || defaults.marginOuter,
-    PAGE_BUFFER:   parseInt(p.getProperty('PAGE_BUFFER'))          || defaults.pageBuffer,
+    WIDTH:         parseFloat(p[PROP_KEYS.PAGE_WIDTH])         || pr.page.width,
+    HEIGHT:        parseFloat(p[PROP_KEYS.PAGE_HEIGHT])        || pr.page.height,
+    MARGIN_TOP:    parseFloat(p[PROP_KEYS.PAGE_MARGIN_TOP])    || pr.page.marginTop,
+    MARGIN_BOTTOM: parseFloat(p[PROP_KEYS.PAGE_MARGIN_BOTTOM]) || pr.page.marginBottom,
+    MARGIN_INNER:  parseFloat(p[PROP_KEYS.PAGE_MARGIN_INNER])  || pr.page.marginInner,
+    MARGIN_OUTER:  parseFloat(p[PROP_KEYS.PAGE_MARGIN_OUTER])  || pr.page.marginOuter,
+    PAGE_BUFFER:   parseInt(p[PROP_KEYS.PAGE_BUFFER])          || pr.page.pageBuffer,
     PPI: 72,
-    FRONT_MATTER_PAGES: parseInt(p.getProperty('FRONT_MATTER_PAGES')) || defaults.frontMatterPages
+    FRONT_MATTER_PAGES: parseInt(p[PROP_KEYS.FRONT_MATTER_PAGES]) || pr.frontMatterPages
   };
 
   config.getUsableHeightPts = function() {
@@ -234,7 +242,8 @@ const ELEMENT_HEIGHTS = {
   WINE_ENTRY: 20,
   SUBTEXT_LINE: 16,
   MIN_WINES_PER_SPLIT: 3,
-  HEADING_VERTICAL_PADDING: 20
+  HEADING_VERTICAL_PADDING: 20,
+  RUXTON_FOOTER_ICON_SIZE: 18
 };
 
 // ============================================================================
