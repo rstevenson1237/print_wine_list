@@ -447,7 +447,7 @@
     Object.keys(fontsData).forEach(function(fileName) {
       var fd     = fontsData[fileName];
       var family = fileName.replace(/\.[^.]+$/, '');
-      css += '@font-face { font-family: "' + family + '"; src: url("' + fd.uri + '") format("' + fd.format + '"); }\n';
+      css += '@font-face { font-family: "' + family + '"; src: url("' + fd.uri + '") format("' + fd.format + '"); font-weight: 100 900; font-style: normal; font-display: block; }\n';
     });
     if (!css) return;
     var style = document.createElement('style');
@@ -465,7 +465,7 @@
       document.head.appendChild(style);
     }
     var family = fileName.replace(/\.[^.]+$/, '');
-    style.textContent += '@font-face { font-family: "' + family + '"; src: url("' + uri + '") format("' + format + '"); }\n';
+    style.textContent += '@font-face { font-family: "' + family + '"; src: url("' + uri + '") format("' + format + '"); font-weight: 100 900; font-style: normal; font-display: block; }\n';
   }
 
   // ============================================================================
@@ -646,6 +646,9 @@
   function buildTitleInlineRow(type, s) {
     var p  = 'hs-' + type + '-title-';
     var ch = ' onchange="updatePreview(' + type + ')"';
+    // spaceBefore / spaceAfter may be null for presets that don't define them
+    var sbVal = (s.spaceBefore !== null && s.spaceBefore !== undefined) ? s.spaceBefore : '';
+    var saVal = (s.spaceAfter  !== null && s.spaceAfter  !== undefined) ? s.spaceAfter  : '';
     return (
       '<div class="row">' +
         '<label>Size</label><input type="number" id="' + p + 'size" value="' + s.size + '" min="6" max="72"' + ch + '>' +
@@ -662,7 +665,12 @@
         '<label>Spacing</label><input type="number" id="' + p + 'spacing" value="' + s.spacing + '" min="0" max="20" step="0.5">' +
         '<label>Underline</label>' + buildSelect(p + 'underline', underlineOpts, s.underline) +
         '<label>Variant</label>'   + buildSelect(p + 'variant',   variantOpts,   s.variant || 'normal', 'updatePreview(' + type + ')') +
-      '</div>'
+      '</div>' +
+      '<div class="row">' +
+        '<label>Space Before (px)</label><input type="number" id="' + p + 'spacebefore" value="' + sbVal + '" min="0" max="200" step="1" placeholder="auto">' +
+        '<label>Space After (px)</label><input type="number"  id="' + p + 'spaceafter"  value="' + saVal + '" min="0" max="200" step="1" placeholder="auto">' +
+      '</div>' +
+      '<div class="help-text" style="margin-top:2px;">Leave Space Before / After blank to use automatic size-proportional margins.</div>'
     );
   }
 
@@ -692,6 +700,11 @@
 
   function saveHeading(type) {
     var pre      = 'hs-' + type + '-';
+    // spaceBefore / spaceAfter are optional — only include when the field has a value.
+    // An empty input means "use automatic margins" and should not be stored.
+    var sbRaw = document.getElementById(pre + 'title-spacebefore').value.trim();
+    var saRaw = document.getElementById(pre + 'title-spaceafter').value.trim();
+
     var styleObj = {
       title: {
         font:      val(pre + 'title-font'),
@@ -712,6 +725,12 @@
         position: val(pre + 'sub-position')
       }
     };
+
+    // Only attach spaceBefore/spaceAfter when the user has entered a value.
+    // This prevents storing empty strings which would later be parsed as NaN.
+    if (sbRaw !== '') styleObj.title.spaceBefore = sbRaw;
+    if (saRaw !== '') styleObj.title.spaceAfter  = saRaw;
+
     google.script.run
       .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
       .withFailureHandler(function(e) { showStatus('error', e.message); })
@@ -895,7 +914,7 @@
       var family    = f.replace(/\.[^.]+$/, '');
       var hasFont   = assetUris.fonts && assetUris.fonts[f];
       var sampleStyle = hasFont
-        ? ' style="font-family:\'' + family + '\'; font-size:14px; color:#333;"'
+        ? ' style="font-family:\'' + family + '\'; font-size:14px; font-weight:normal; color:#333;"'
         : '';
       var sample = '<span class="asset-preview-sample"' + sampleStyle + '>Aa — Wine &amp; Rosé</span>';
       return '<div class="asset-pool-item">' +
