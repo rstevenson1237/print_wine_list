@@ -29,23 +29,19 @@ function onOpen() {
     .addToUi();
 }
 
-// ============================================================================
-// Asset Loading
-// ============================================================================
-
 /**
- * Fetches all static assets required for the wine list HTML.
- * Collects font files referenced by any heading style or wine entry setting,
- * deduplicates them, and loads each as a base64 data URI.
+ * Loads font and image assets from Drive as base64 data URIs.
+ * Accepts pre-resolved settings objects so no DocumentProperties reads
+ * are performed inside this function — all Drive I/O only.
  *
+ * @param {Object} imageSettings   Resolved image settings (logo, footer filenames).
+ * @param {Object} headingStyles   Resolved heading styles for all types.
+ * @param {Object} wineEntry       Resolved wine entry style.
+ * @param {Object} footerSettings  Resolved footer settings.
  * @returns {Object|null} Asset object or null if any required asset is missing.
  */
-function loadAssets() {
-  var imageSettings = getImageSettings();
-  var headingStyles = getAllHeadingStyles();
-  var wineEntry = getWineEntryStyle();
-
-  // Collect all unique font filenames
+function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
+  // Collect all unique font filenames referenced by active styles
   var fontFiles = new Set();
   for (var t = 1; t <= MAX_HEADING_TYPE; t++) {
     var hs = headingStyles[t];
@@ -56,21 +52,35 @@ function loadAssets() {
   }
   fontFiles.add(wineEntry.font);
 
-  // Resolve MIME types from file extensions so SVG footer icons load correctly
+  // Resolve MIME types
   var imageMimeMap = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
     svg: 'image/svg+xml', webp: 'image/webp'
   };
-  var footerMime = imageMimeMap[extensionOf(imageSettings.footer)] || 'image/png';
-  var logoMime   = imageMimeMap[extensionOf(imageSettings.logo)]   || 'image/png';
+  var footerExt  = extensionOf(imageSettings.footer);
+  var footerMime = imageMimeMap[footerExt] || 'image/png';
+  var logoMime   = imageMimeMap[extensionOf(imageSettings.logo)] || 'image/png';
 
-  // Load images
+  // Load images from Drive
   var footerImageUri = getFileAsDataUri(imageSettings.footer, footerMime);
   var logoImageUri   = getFileAsDataUri(imageSettings.logo,   logoMime);
 
-  // Load fonts
+  // Resize SVG footer icons for the Ruxton Bar — CSS cannot resize content:url() images;
+  // only the SVG's own width/height attributes control rendered size in @page margin boxes.
+  if (footerImageUri && footerSettings.style === 'ruxton' && footerExt === 'svg') {
+    footerImageUri = resizeSvgDataUri_(
+      footerImageUri,
+      ELEMENT_HEIGHTS.RUXTON_FOOTER_ICON_SIZE,
+      ELEMENT_HEIGHTS.RUXTON_FOOTER_ICON_SIZE
+    );
+    Logger.log('loadAssets: Ruxton footer SVG resized to ' +
+      ELEMENT_HEIGHTS.RUXTON_FOOTER_ICON_SIZE + 'x' +
+      ELEMENT_HEIGHTS.RUXTON_FOOTER_ICON_SIZE + 'px');
+  }
+
+  // Load fonts from Drive
   var fontUris = new Map();
-  var missing = [];
+  var missing  = [];
 
   if (!footerImageUri) missing.push('Footer image (' + imageSettings.footer + ')');
   if (!logoImageUri)   missing.push('Logo image ('   + imageSettings.logo   + ')');
@@ -79,10 +89,7 @@ function loadAssets() {
     var ext = extensionOf(fileName);
     var uri = getFileAsDataUri(fileName, getMimeForExtension(ext));
     if (uri) {
-      fontUris.set(fileName, {
-        uri: uri,
-        format: getFontFormatForExtension(ext)
-      });
+      fontUris.set(fileName, { uri: uri, format: getFontFormatForExtension(ext) });
     } else {
       missing.push('Font (' + fileName + ')');
     }
@@ -111,8 +118,23 @@ function loadAssets() {
 function generateWineList() {
   var ui = SpreadsheetApp.getUi();
 
-  // Step 1: Load assets
-  var assets = loadAssets();
+  // Single DocumentProperties batch read — shared by every settings getter below.
+  // This replaces ~10 separate getDocumentProperties() calls and ~50 getProperty()
+  // calls that previously occurred across the individual getter functions.
+  var allProps = PropertiesService.getDocumentProperties().getProperties();
+  var preset   = getActiveBrandPreset(allProps);
+
+  // Pre-resolve all settings once, passing allProps and preset to avoid
+  // redundant reads. headingStyles, wineEntry, and footerSettings are also
+  // passed directly into loadAssets() so it has no reason to re-read properties.
+  var imageSettings  = getImageSettings(allProps, preset);
+  var headingStyles  = getAllHeadingStyles(allProps, preset);
+  var wineEntry      = getWineEntryStyle(allProps, preset);
+  var footerSettings = getFooterSettings(allProps, preset);
+  var pageConfig     = getPageConfig(allProps, preset);
+
+  // Step 1: Load assets (Drive I/O only — no further property reads)
+  var assets = loadAssets(imageSettings, headingStyles, wineEntry, footerSettings);
   if (!assets) return;
 
   // Step 2: Prepare data
@@ -133,14 +155,13 @@ function generateWineList() {
     if (response === ui.Button.CANCEL) return;
   }
 
-  // Step 4: Build brand settings object (now includes all settings groups)
-  var pageConfig = getPageConfig();
+  // Step 4: Build brand object from already-resolved settings — no new reads
   var brand = {
-    colors:        getColorSettings(),
-    welcome:       getWelcomeSettings(),
-    headingStyles: getAllHeadingStyles(),
-    wineEntry:     getWineEntryStyle(),
-    footer:        getFooterSettings(),
+    colors:        getColorSettings(allProps, preset),
+    welcome:       getWelcomeSettings(allProps, preset),
+    headingStyles: headingStyles,
+    wineEntry:     wineEntry,
+    footer:        footerSettings,
     pageConfig:    pageConfig
   };
 
