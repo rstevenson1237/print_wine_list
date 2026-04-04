@@ -80,7 +80,8 @@ const PROP_KEYS = {
  * Returns the active brand name from DocumentProperties.
  * @returns {string}
  */
-function getBrandName() {
+function getBrandName(allProps) {
+  if (allProps) return allProps[PROP_KEYS.BRAND_NAME] || 'BYGONE';
   return PropertiesService.getDocumentProperties().getProperty(PROP_KEYS.BRAND_NAME) || 'BYGONE';
 }
 
@@ -88,8 +89,8 @@ function getBrandName() {
  * Returns the active brand preset object from config.gs.
  * @returns {Object}
  */
-function getActiveBrandPreset() {
-  var name = getBrandName();
+function getActiveBrandPreset(allProps) {
+  var name = getBrandName(allProps);
   return BRAND_PRESETS[name] || BRAND_PRESETS.BYGONE;
 }
 
@@ -192,30 +193,46 @@ function saveBrandName(brandName) {
 // ============================================================================
 
 /**
+ * Scans the spreadsheet's Drive folder once, returning both font and image
+ * filename lists in a single pass. Eliminates the four separate folder
+ * iterations that previously occurred during getAllSettings() and
+ * getAssetPreviewData().
+ * @private
+ * @returns {{ fonts: string[], images: string[] }}
+ */
+function scanDriveFolder_() {
+  var fonts  = [];
+  var images = [];
+  try {
+    var ssFile = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId());
+    var parents = ssFile.getParents();
+    if (!parents.hasNext()) return { fonts: fonts, images: images };
+    var folder    = parents.next();
+    var fontExts  = ['otf', 'ttf', 'woff', 'woff2'];
+    var imageExts = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
+    var files = folder.getFiles();
+    while (files.hasNext()) {
+      var file = files.next();
+      var name = file.getName();
+      var ext  = name.split('.').pop().toLowerCase();
+      if (fontExts.indexOf(ext)  > -1) fonts.push(name);
+      if (imageExts.indexOf(ext) > -1) images.push(name);
+    }
+    fonts.sort();
+    images.sort();
+  } catch (e) {
+    Logger.log('scanDriveFolder_: ' + e.toString());
+  }
+  return { fonts: fonts, images: images };
+}
+
+/**
  * Scans the spreadsheet's Drive folder for font files.
  * Returns a sorted array of filenames.
  * @returns {string[]}
  */
 function getAvailableFonts() {
-  try {
-    var ssFile = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId());
-    var parents = ssFile.getParents();
-    if (!parents.hasNext()) return [];
-    var folder = parents.next();
-    var fonts = [];
-    var fontExts = ['otf', 'ttf', 'woff', 'woff2'];
-    var files = folder.getFiles();
-    while (files.hasNext()) {
-      var file = files.next();
-      var name = file.getName();
-      var ext = name.split('.').pop().toLowerCase();
-      if (fontExts.indexOf(ext) > -1) fonts.push(name);
-    }
-    return fonts.sort();
-  } catch (e) {
-    Logger.log('Error scanning for fonts: ' + e.toString());
-    return [];
-  }
+  return scanDriveFolder_().fonts;
 }
 
 /**
@@ -224,25 +241,7 @@ function getAvailableFonts() {
  * @returns {string[]}
  */
 function getAvailableImages() {
-  try {
-    var ssFile = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId());
-    var parents = ssFile.getParents();
-    if (!parents.hasNext()) return [];
-    var folder = parents.next();
-    var images = [];
-    var imageExts = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
-    var files = folder.getFiles();
-    while (files.hasNext()) {
-      var file = files.next();
-      var name = file.getName();
-      var ext = name.split('.').pop().toLowerCase();
-      if (imageExts.indexOf(ext) > -1) images.push(name);
-    }
-    return images.sort();
-  } catch (e) {
-    Logger.log('Error scanning for images: ' + e.toString());
-    return [];
-  }
+  return scanDriveFolder_().images;
 }
 
 /**
@@ -253,8 +252,7 @@ function getAvailableImages() {
  * @returns {{ fonts: Object.<string,{uri:string,format:string}>, images: Object.<string,string> }}
  */
 function getAssetPreviewData() {
-  var fontPool  = getAvailableFonts();
-  var imagePool = getAvailableImages();
+  var assets = scanDriveFolder_();
 
   var imageMimeMap = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
@@ -264,15 +262,13 @@ function getAssetPreviewData() {
   var fonts  = {};
   var images = {};
 
-  fontPool.forEach(function(fileName) {
+  assets.fonts.forEach(function(fileName) {
     var ext = extensionOf(fileName);
     var uri = getFileAsDataUri(fileName, getMimeForExtension(ext));
-    if (uri) {
-      fonts[fileName] = { uri: uri, format: getFontFormatForExtension(ext) };
-    }
+    if (uri) fonts[fileName] = { uri: uri, format: getFontFormatForExtension(ext) };
   });
 
-  imagePool.forEach(function(fileName) {
+  assets.images.forEach(function(fileName) {
     var ext  = extensionOf(fileName);
     var mime = imageMimeMap[ext] || 'image/png';
     var uri  = getFileAsDataUri(fileName, mime);
@@ -290,20 +286,19 @@ function getAssetPreviewData() {
  * Returns current page layout settings.
  * @returns {Object}
  */
-function getPageSettings() {
-  var p      = PropertiesService.getDocumentProperties();
-  var preset = getActiveBrandPreset();
-
+function getPageSettings(allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
   return {
-    sizePreset:       p.getProperty(PROP_KEYS.PAGE_SIZE_PRESET)                       || preset.page.sizePreset,
-    width:            parseFloat(p.getProperty(PROP_KEYS.PAGE_WIDTH))                 || preset.page.width,
-    height:           parseFloat(p.getProperty(PROP_KEYS.PAGE_HEIGHT))                || preset.page.height,
-    marginTop:        parseFloat(p.getProperty(PROP_KEYS.PAGE_MARGIN_TOP))            || preset.page.marginTop,
-    marginBottom:     parseFloat(p.getProperty(PROP_KEYS.PAGE_MARGIN_BOTTOM))         || preset.page.marginBottom,
-    marginInner:      parseFloat(p.getProperty(PROP_KEYS.PAGE_MARGIN_INNER))          || preset.page.marginInner,
-    marginOuter:      parseFloat(p.getProperty(PROP_KEYS.PAGE_MARGIN_OUTER))          || preset.page.marginOuter,
-    pageBuffer:       parseInt(p.getProperty(PROP_KEYS.PAGE_BUFFER))                  || preset.page.pageBuffer,
-    frontMatterPages: parseInt(p.getProperty(PROP_KEYS.FRONT_MATTER_PAGES))           || preset.frontMatterPages
+    sizePreset:       p[PROP_KEYS.PAGE_SIZE_PRESET]                || pr.page.sizePreset,
+    width:            parseFloat(p[PROP_KEYS.PAGE_WIDTH])          || pr.page.width,
+    height:           parseFloat(p[PROP_KEYS.PAGE_HEIGHT])         || pr.page.height,
+    marginTop:        parseFloat(p[PROP_KEYS.PAGE_MARGIN_TOP])     || pr.page.marginTop,
+    marginBottom:     parseFloat(p[PROP_KEYS.PAGE_MARGIN_BOTTOM])  || pr.page.marginBottom,
+    marginInner:      parseFloat(p[PROP_KEYS.PAGE_MARGIN_INNER])   || pr.page.marginInner,
+    marginOuter:      parseFloat(p[PROP_KEYS.PAGE_MARGIN_OUTER])   || pr.page.marginOuter,
+    pageBuffer:       parseInt(p[PROP_KEYS.PAGE_BUFFER])           || pr.page.pageBuffer,
+    frontMatterPages: parseInt(p[PROP_KEYS.FRONT_MATTER_PAGES])    || pr.frontMatterPages
   };
 }
 
@@ -315,15 +310,14 @@ function getPageSettings() {
  * Returns current footer / running label settings.
  * @returns {Object}
  */
-function getFooterSettings() {
-  var p         = PropertiesService.getDocumentProperties();
-  var preset    = getActiveBrandPreset();
-  var showLabel = p.getProperty(PROP_KEYS.SHOW_RUNNING_LABEL);
-
+function getFooterSettings(allProps, preset) {
+  var p         = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr        = preset   || getActiveBrandPreset(p);
+  var showLabel = p[PROP_KEYS.SHOW_RUNNING_LABEL];
   return {
-    style:                p.getProperty(PROP_KEYS.FOOTER_STYLE)           || preset.footer.style,
-    showRunningLabel:     showLabel !== null ? showLabel === 'true' : preset.footer.showRunningLabel,
-    runningLabelPosition: p.getProperty(PROP_KEYS.RUNNING_LABEL_POSITION) || preset.footer.runningLabelPosition
+    style:                p[PROP_KEYS.FOOTER_STYLE]           || pr.footer.style,
+    showRunningLabel:     showLabel != null ? showLabel === 'true' : pr.footer.showRunningLabel,
+    runningLabelPosition: p[PROP_KEYS.RUNNING_LABEL_POSITION] || pr.footer.runningLabelPosition
   };
 }
 
@@ -332,34 +326,52 @@ function getFooterSettings() {
 // ============================================================================
 
 /**
+ * Reads an optional numeric heading property with graceful fallback.
+ * Handles both null (individual getProperty result) and undefined
+ * (object key miss from a getProperties batch result).
+ * @private
+ */
+function getOptionalPt_(stored, presetVal) {
+  if (stored != null) {
+    var n = parseFloat(stored);
+    if (!isNaN(n)) return n;
+  }
+  return (presetVal !== undefined) ? presetVal : null;
+}
+
+/**
  * Returns the heading style for a given type, with brand-preset fallbacks.
+ * spaceBefore and spaceAfter are optional — null means the CSS generation
+ * falls back to the size-proportional formula for backwards compatibility.
  * @param {number} type  1–4
  * @returns {Object|null}
  */
-function getHeadingStyle(type) {
-  var p      = PropertiesService.getDocumentProperties();
-  var preset = getActiveBrandPreset();
-  var d      = preset.headingStyles[type];
+function getHeadingStyle(type, allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
+  var d  = pr.headingStyles[type];
   if (!d) return null;
 
   return {
     title: {
-      font:      p.getProperty(headingKey_(type, 'TITLE', 'FONT'))                || d.title.font,
-      size:      parseInt(p.getProperty(headingKey_(type, 'TITLE', 'SIZE')))      || d.title.size,
-      color:     p.getProperty(headingKey_(type, 'TITLE', 'COLOR'))               || d.title.color,
-      align:     p.getProperty(headingKey_(type, 'TITLE', 'ALIGN'))               || d.title.align,
-      weight:    p.getProperty(headingKey_(type, 'TITLE', 'WEIGHT'))              || d.title.weight,
-      transform: p.getProperty(headingKey_(type, 'TITLE', 'TRANSFORM'))           || d.title.transform,
-      spacing:   parseFloat(p.getProperty(headingKey_(type, 'TITLE', 'SPACING'))) || d.title.spacing,
-      underline: p.getProperty(headingKey_(type, 'TITLE', 'UNDERLINE'))           || d.title.underline,
-      variant:   p.getProperty(headingKey_(type, 'TITLE', 'VARIANT'))             || d.title.variant || 'normal'
+      font:        p[headingKey_(type, 'TITLE', 'FONT')]                        || d.title.font,
+      size:        parseInt(p[headingKey_(type, 'TITLE', 'SIZE')])              || d.title.size,
+      color:       p[headingKey_(type, 'TITLE', 'COLOR')]                       || d.title.color,
+      align:       p[headingKey_(type, 'TITLE', 'ALIGN')]                       || d.title.align,
+      weight:      p[headingKey_(type, 'TITLE', 'WEIGHT')]                      || d.title.weight,
+      transform:   p[headingKey_(type, 'TITLE', 'TRANSFORM')]                   || d.title.transform,
+      spacing:     parseFloat(p[headingKey_(type, 'TITLE', 'SPACING')])         || d.title.spacing,
+      underline:   p[headingKey_(type, 'TITLE', 'UNDERLINE')]                   || d.title.underline,
+      variant:     p[headingKey_(type, 'TITLE', 'VARIANT')]                     || d.title.variant || 'normal',
+      spaceBefore: getOptionalPt_(p[headingKey_(type, 'TITLE', 'SPACEBEFORE')], d.title.spaceBefore),
+      spaceAfter:  getOptionalPt_(p[headingKey_(type, 'TITLE', 'SPACEAFTER')],  d.title.spaceAfter)
     },
     subtext: {
-      font:     p.getProperty(headingKey_(type, 'SUB', 'FONT'))                   || d.subtext.font,
-      size:     parseInt(p.getProperty(headingKey_(type, 'SUB', 'SIZE')))         || d.subtext.size,
-      color:    p.getProperty(headingKey_(type, 'SUB', 'COLOR'))                  || d.subtext.color,
-      weight:   p.getProperty(headingKey_(type, 'SUB', 'WEIGHT'))                 || d.subtext.weight,
-      position: p.getProperty(headingKey_(type, 'SUB', 'POSITION'))               || d.subtext.position
+      font:     p[headingKey_(type, 'SUB', 'FONT')]                             || d.subtext.font,
+      size:     parseInt(p[headingKey_(type, 'SUB', 'SIZE')])                   || d.subtext.size,
+      color:    p[headingKey_(type, 'SUB', 'COLOR')]                            || d.subtext.color,
+      weight:   p[headingKey_(type, 'SUB', 'WEIGHT')]                           || d.subtext.weight,
+      position: p[headingKey_(type, 'SUB', 'POSITION')]                         || d.subtext.position
     }
   };
 }
@@ -368,10 +380,12 @@ function getHeadingStyle(type) {
  * Returns heading styles for all types (1–MAX_HEADING_TYPE).
  * @returns {Object.<number, Object>}
  */
-function getAllHeadingStyles() {
+function getAllHeadingStyles(allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
   var styles = {};
   for (var t = 1; t <= MAX_HEADING_TYPE; t++) {
-    styles[t] = getHeadingStyle(t);
+    styles[t] = getHeadingStyle(t, p, pr);
   }
   return styles;
 }
@@ -380,49 +394,52 @@ function getAllHeadingStyles() {
 // Getters — Wine Entry, Images, Colors, Welcome
 // ============================================================================
 
-function getWineEntryStyle() {
-  var p      = PropertiesService.getDocumentProperties();
-  var preset = getActiveBrandPreset();
+function getWineEntryStyle(allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
   return {
-    font:   p.getProperty(PROP_KEYS.WINE_FONT)             || preset.wineEntry.font,
-    size:   parseInt(p.getProperty(PROP_KEYS.WINE_SIZE))   || preset.wineEntry.size,
-    color:  p.getProperty(PROP_KEYS.WINE_COLOR)            || preset.wineEntry.color,
-    weight: p.getProperty(PROP_KEYS.WINE_WEIGHT)           || preset.wineEntry.weight,
-    style:  p.getProperty(PROP_KEYS.WINE_STYLE)            || preset.wineEntry.style
+    font:   p[PROP_KEYS.WINE_FONT]           || pr.wineEntry.font,
+    size:   parseInt(p[PROP_KEYS.WINE_SIZE]) || pr.wineEntry.size,
+    color:  p[PROP_KEYS.WINE_COLOR]          || pr.wineEntry.color,
+    weight: p[PROP_KEYS.WINE_WEIGHT]         || pr.wineEntry.weight,
+    style:  p[PROP_KEYS.WINE_STYLE]          || pr.wineEntry.style
   };
 }
 
-function getImageSettings() {
-  var p      = PropertiesService.getDocumentProperties();
-  var preset = getActiveBrandPreset();
+function getImageSettings(allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
   return {
-    logo:   p.getProperty(PROP_KEYS.IMAGE_LOGO)   || preset.images.logo,
-    footer: p.getProperty(PROP_KEYS.IMAGE_FOOTER) || preset.images.footer
+    logo:   p[PROP_KEYS.IMAGE_LOGO]   || pr.images.logo,
+    footer: p[PROP_KEYS.IMAGE_FOOTER] || pr.images.footer
   };
 }
 
-function getColorSettings() {
-  var p      = PropertiesService.getDocumentProperties();
-  var preset = getActiveBrandPreset();
+function getColorSettings(allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
   return {
-    primary: p.getProperty(PROP_KEYS.COLOR_PRIMARY) || preset.colors.primary,
-    text:    p.getProperty(PROP_KEYS.COLOR_TEXT)     || preset.colors.text
+    primary: p[PROP_KEYS.COLOR_PRIMARY] || pr.colors.primary,
+    text:    p[PROP_KEYS.COLOR_TEXT]    || pr.colors.text
   };
 }
 
-function getWelcomeSettings() {
-  var p      = PropertiesService.getDocumentProperties();
-  var preset = getActiveBrandPreset();
+function getWelcomeSettings(allProps, preset) {
+  var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
+  var pr = preset   || getActiveBrandPreset(p);
 
-  var showTitle = p.getProperty(PROP_KEYS.SHOW_TITLE_PAGE);
-  var showDate  = p.getProperty(PROP_KEYS.SHOW_DATE);
+  var showTitle = p[PROP_KEYS.SHOW_TITLE_PAGE];
+  var showDate  = p[PROP_KEYS.SHOW_DATE];
+  var line1     = p[PROP_KEYS.WELCOME_LINE1];
+  var line2     = p[PROP_KEYS.WELCOME_LINE2];
+  var line3     = p[PROP_KEYS.WELCOME_LINE3];
 
   return {
-    showTitlePage: showTitle !== null ? showTitle === 'true' : preset.welcome.showTitlePage,
-    showDate:      showDate  !== null ? showDate  === 'true' : preset.welcome.showDate,
-    line1: p.getProperty(PROP_KEYS.WELCOME_LINE1) !== null ? p.getProperty(PROP_KEYS.WELCOME_LINE1) : preset.welcome.line1,
-    line2: p.getProperty(PROP_KEYS.WELCOME_LINE2) !== null ? p.getProperty(PROP_KEYS.WELCOME_LINE2) : preset.welcome.line2,
-    line3: p.getProperty(PROP_KEYS.WELCOME_LINE3) !== null ? p.getProperty(PROP_KEYS.WELCOME_LINE3) : preset.welcome.line3
+    showTitlePage: showTitle != null ? showTitle === 'true' : pr.welcome.showTitlePage,
+    showDate:      showDate  != null ? showDate  === 'true' : pr.welcome.showDate,
+    line1:         line1     != null ? line1     : pr.welcome.line1,
+    line2:         line2     != null ? line2     : pr.welcome.line2,
+    line3:         line3     != null ? line3     : pr.welcome.line3
   };
 }
 
@@ -437,19 +454,23 @@ function getWelcomeSettings() {
  * @returns {Object}
  */
 function getAllSettings() {
+  var allProps = PropertiesService.getDocumentProperties().getProperties();
+  var preset   = getActiveBrandPreset(allProps);
+  var assets   = scanDriveFolder_();
+
   return {
-    brandName:     getBrandName(),
+    brandName:     allProps[PROP_KEYS.BRAND_NAME] || 'BYGONE',
     brandPresets:  getBrandPresetNames(),
     pageSizes:     getPageSizePresetNames(),
-    pageSettings:  getPageSettings(),
-    headingStyles: getAllHeadingStyles(),
-    wineEntry:     getWineEntryStyle(),
-    images:        getImageSettings(),
-    colors:        getColorSettings(),
-    welcome:       getWelcomeSettings(),
-    footer:        getFooterSettings(),
-    fontPool:      getAvailableFonts(),
-    imagePool:     getAvailableImages()
+    pageSettings:  getPageSettings(allProps, preset),
+    headingStyles: getAllHeadingStyles(allProps, preset),
+    wineEntry:     getWineEntryStyle(allProps, preset),
+    images:        getImageSettings(allProps, preset),
+    colors:        getColorSettings(allProps, preset),
+    welcome:       getWelcomeSettings(allProps, preset),
+    footer:        getFooterSettings(allProps, preset),
+    fontPool:      assets.fonts,
+    imagePool:     assets.images
   };
 }
 
