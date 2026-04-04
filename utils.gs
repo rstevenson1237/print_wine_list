@@ -87,6 +87,64 @@ function getFileAsDataUri(fileName, mimeType) {
 }
 
 /**
+ * Rewrites the width and height attributes of a base64-encoded SVG data URI.
+ * Required for Ruxton Bar footer icons because CSS cannot resize images placed
+ * via content: url() in @page margin boxes — only the SVG's intrinsic dimensions
+ * (its own width/height XML attributes) control the rendered size.
+ *
+ * Handles both attribute forms:
+ *   <svg width="200" height="200" ...>
+ *   <svg width="200px" height="200px" ...>
+ *
+ * If the URI is not an SVG data URI, it is returned unchanged.
+ *
+ * @param {string} dataUri  A data URI string (data:image/svg+xml;base64,...).
+ * @param {number} width    Target width in pixels.
+ * @param {number} height   Target height in pixels.
+ * @returns {string}        Modified data URI, or original if not SVG / parse fails.
+ */
+function resizeSvgDataUri_(dataUri, width, height) {
+  if (!dataUri || dataUri.indexOf('image/svg+xml') === -1) return dataUri;
+
+  try {
+    var base64Part = dataUri.split(',')[1];
+    if (!base64Part) return dataUri;
+
+    var svgText = Utilities.newBlob(
+      Utilities.base64Decode(base64Part),
+      'image/svg+xml'
+    ).getDataAsString();
+
+    // Replace existing width / height attributes on the root <svg> element.
+    // The regex targets only the opening <svg ...> tag to avoid touching
+    // width/height on nested elements (e.g. rect, image).
+    svgText = svgText.replace(
+      /(<svg\b[^>]*?)\s+width\s*=\s*["'][^"']*["']/i,
+      '$1 width="' + width + '"'
+    );
+    svgText = svgText.replace(
+      /(<svg\b[^>]*?)\s+height\s*=\s*["'][^"']*["']/i,
+      '$1 height="' + height + '"'
+    );
+
+    // If there were no existing width/height attributes, inject them
+    // directly after the opening <svg tag.
+    if (svgText.indexOf('width="' + width + '"') === -1) {
+      svgText = svgText.replace(/<svg\b/, '<svg width="' + width + '" height="' + height + '"');
+    }
+
+    var resizedBase64 = Utilities.base64Encode(
+      Utilities.newBlob(svgText, 'image/svg+xml').getBytes()
+    );
+    return 'data:image/svg+xml;base64,' + resizedBase64;
+
+  } catch (e) {
+    Logger.log('resizeSvgDataUri_: failed to resize SVG (' + e.toString() + '), using original.');
+    return dataUri;
+  }
+}
+
+/**
  * Safely retrieves a value from a row by column index.
  * @param {Array} row The data row.
  * @param {number} index The column index.
