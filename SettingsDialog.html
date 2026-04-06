@@ -447,7 +447,7 @@
     Object.keys(fontsData).forEach(function(fileName) {
       var fd     = fontsData[fileName];
       var family = fileName.replace(/\.[^.]+$/, '');
-      css += '@font-face { font-family: "' + family + '"; src: url("' + fd.uri + '") format("' + fd.format + '"); font-weight: 100 900; font-style: normal; font-display: block; }\n';
+      css += '@font-face { font-family: "' + family + '"; src: url("' + fd.uri + '") format("' + fd.format + '"); font-weight: normal; font-style: normal; font-display: block; }\n';
     });
     if (!css) return;
     var style = document.createElement('style');
@@ -456,7 +456,6 @@
     document.head.appendChild(style);
   }
 
-  /** Appends a single new @font-face rule after an upload, without full re-injection. */
   function addFontFace(fileName, uri, format) {
     var style = document.getElementById('font-face-styles');
     if (!style) {
@@ -465,7 +464,7 @@
       document.head.appendChild(style);
     }
     var family = fileName.replace(/\.[^.]+$/, '');
-    style.textContent += '@font-face { font-family: "' + family + '"; src: url("' + uri + '") format("' + format + '"); font-weight: 100 900; font-style: normal; font-display: block; }\n';
+    style.textContent += '@font-face { font-family: "' + family + '"; src: url("' + uri + '") format("' + format + '"); font-weight: normal; font-style: normal; font-display: block; }\n';
   }
 
   // ============================================================================
