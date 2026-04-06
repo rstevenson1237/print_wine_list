@@ -48,7 +48,7 @@ function generateHTMLHead(assets, brand) {
       '\n        @font-face {\n' +
       '            font-family: \'' + familyName + '\';\n' +
       '            src: url(\'' + fontData.uri + '\') format(\'' + fontData.format + '\');\n' +
-      '            font-weight: 100 900;\n' +
+      '            font-weight: normal;\n' +
       '            font-style: normal;\n' +
       '            font-display: block;\n' +
       '        }'
@@ -272,7 +272,7 @@ function generateHTMLHead(assets, brand) {
     '        body {\n',
     '            font-family: \'', wineFont, '\', \'Georgia\', serif;\n',
     '            color: ', col.text, ';\n',
-    '            line-height: 1.4;\n',
+    '            line-height: ', ELEMENT_HEIGHTS.LINE_HEIGHT, ';\n',
     '        }\n',
     '        .wine-list { counter-reset: page ', pc.FRONT_MATTER_PAGES, '; }\n\n',
     '        /* Title Page */\n',
@@ -334,8 +334,8 @@ function generateHTMLHead(assets, brand) {
     '            display: flex;\n',
     '            justify-content: space-between;\n',
     '            align-items: baseline;\n',
-    '            margin: 6px 0;\n',
-    '            padding: 2px 0;\n',
+    '            margin: ', ELEMENT_HEIGHTS.WINE_ENTRY_MARGIN, 'px 0;\n',
+    '            padding: ', ELEMENT_HEIGHTS.WINE_ENTRY_PADDING, 'px 0;\n',
     '            font-size: ', we.size, 'px;\n',
     '            font-family: \'', wineFont, '\', \'Georgia\', serif;\n',
     '            font-weight: ', we.weight, ';\n',
