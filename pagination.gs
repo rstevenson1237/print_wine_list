@@ -133,10 +133,11 @@ function estimateHeadingHeight(typeLevel, subtext, headingStyles) {
   var ts = style.title;
   var spaceBefore = (ts.spaceBefore !== null && ts.spaceBefore !== undefined)
     ? ts.spaceBefore : Math.round(ts.size * 0.7);
-  var spaceAfter  = (ts.spaceAfter !== null && ts.spaceAfter !== undefined)
-    ? ts.spaceAfter : Math.round(ts.size * 0.3);
+  var spaceAfter  = (ts.spaceAfter  !== null && ts.spaceAfter  !== undefined)
+    ? ts.spaceAfter  : Math.round(ts.size * 0.4);  // ← was 0.3, must match html.gs
 
-  var titleHeight = spaceBefore + ts.size + spaceAfter;
+  // Apply LINE_HEIGHT multiplier to heading font size — inherited from body
+  var titleHeight = spaceBefore + Math.round(ts.size * ELEMENT_HEIGHTS.LINE_HEIGHT) + spaceAfter;
 
   var subtextHeight = 0;
   if (subtext) {
