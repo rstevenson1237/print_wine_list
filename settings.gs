@@ -67,9 +67,10 @@ const PROP_KEYS = {
   WINE_STYLE:  'WINE_ENTRY_STYLE',
 
   // Footer
-  FOOTER_STYLE:           'FOOTER_STYLE',
-  SHOW_RUNNING_LABEL:     'SHOW_RUNNING_LABEL',
-  RUNNING_LABEL_POSITION: 'RUNNING_LABEL_POSITION'
+  FOOTER_PAGE_NUMBER_POSITION: 'FOOTER_PAGE_NUMBER_POSITION',
+  FOOTER_RULE:                 'FOOTER_RULE',
+  SHOW_RUNNING_LABEL:          'SHOW_RUNNING_LABEL',
+  RUNNING_LABEL_POSITION:      'RUNNING_LABEL_POSITION'
 };
 
 // ============================================================================
@@ -152,9 +153,10 @@ function loadBrandPreset(brandName) {
     props[PROP_KEYS.WINE_STYLE]  = preset.wineEntry.style;
 
     // Footer
-    props[PROP_KEYS.FOOTER_STYLE]           = preset.footer.style;
-    props[PROP_KEYS.SHOW_RUNNING_LABEL]     = preset.footer.showRunningLabel.toString();
-    props[PROP_KEYS.RUNNING_LABEL_POSITION] = preset.footer.runningLabelPosition;
+    props[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] = preset.footer.pageNumberPosition;
+    props[PROP_KEYS.FOOTER_RULE]                 = preset.footer.footerRule;
+    props[PROP_KEYS.SHOW_RUNNING_LABEL]          = preset.footer.showRunningLabel.toString();
+    props[PROP_KEYS.RUNNING_LABEL_POSITION]      = preset.footer.runningLabelPosition;
 
     // Heading Styles
     for (var t = 1; t <= MAX_HEADING_TYPE; t++) {
@@ -315,9 +317,10 @@ function getFooterSettings(allProps, preset) {
   var pr        = preset   || getActiveBrandPreset(p);
   var showLabel = p[PROP_KEYS.SHOW_RUNNING_LABEL];
   return {
-    style:                p[PROP_KEYS.FOOTER_STYLE]           || pr.footer.style,
-    showRunningLabel:     showLabel != null ? showLabel === 'true' : pr.footer.showRunningLabel,
-    runningLabelPosition: p[PROP_KEYS.RUNNING_LABEL_POSITION] || pr.footer.runningLabelPosition
+    pageNumberPosition:   p[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] || pr.footer.pageNumberPosition,
+    footerRule:           p[PROP_KEYS.FOOTER_RULE]                 || pr.footer.footerRule,
+    showRunningLabel:     showLabel != null ? showLabel === 'true'  : pr.footer.showRunningLabel,
+    runningLabelPosition: p[PROP_KEYS.RUNNING_LABEL_POSITION]      || pr.footer.runningLabelPosition
   };
 }
 
@@ -558,9 +561,10 @@ function savePageSettings(pageObj) {
 function saveFooterSettings(footerObj) {
   try {
     var p = PropertiesService.getDocumentProperties();
-    if (footerObj.style !== undefined)                p.setProperty(PROP_KEYS.FOOTER_STYLE,           footerObj.style);
-    if (footerObj.showRunningLabel !== undefined)     p.setProperty(PROP_KEYS.SHOW_RUNNING_LABEL,     footerObj.showRunningLabel.toString());
-    if (footerObj.runningLabelPosition !== undefined) p.setProperty(PROP_KEYS.RUNNING_LABEL_POSITION, footerObj.runningLabelPosition);
+    if (footerObj.pageNumberPosition !== undefined) p.setProperty(PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION, footerObj.pageNumberPosition);
+    if (footerObj.footerRule         !== undefined) p.setProperty(PROP_KEYS.FOOTER_RULE,                 footerObj.footerRule);
+    if (footerObj.showRunningLabel   !== undefined) p.setProperty(PROP_KEYS.SHOW_RUNNING_LABEL,          footerObj.showRunningLabel.toString());
+    if (footerObj.runningLabelPosition !== undefined) p.setProperty(PROP_KEYS.RUNNING_LABEL_POSITION,    footerObj.runningLabelPosition);
     return { success: true, message: 'Footer settings saved.' };
   } catch (e) {
     return { success: false, message: e.toString() };
