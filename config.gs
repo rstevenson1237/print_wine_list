@@ -114,8 +114,9 @@ const BRAND_PRESETS = {
       font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal'
     },
     footer: {
-      style: 'image',
-      showRunningLabel: true,
+      pageNumberPosition: 'center',
+      footerRule:         'none',
+      showRunningLabel:   true,
       runningLabelPosition: 'header'
     },
     frontMatterPages: 2
@@ -178,8 +179,9 @@ const BRAND_PRESETS = {
       font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic'
     },
     footer: {
-      style: 'ruxton',
-      showRunningLabel: true,
+      pageNumberPosition: 'outer',
+      footerRule:         'double',
+      showRunningLabel:   true,
       runningLabelPosition: 'header'
     },
     frontMatterPages: 2
@@ -207,8 +209,7 @@ function getBrandPresetNames() {
  * @returns {Object} Page configuration with computed helper methods.
  */
 function getPageConfig(allProps, preset) {
-  // FIX: was getUserProperties() — must be DocumentProperties so all managers
-  // at a property share the same page dimensions rather than each having their own.
+
   var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
   var pr = preset   || getActiveBrandPreset(p);
 
@@ -239,12 +240,29 @@ function getPageConfig(allProps, preset) {
 // ============================================================================
 
 const ELEMENT_HEIGHTS = {
-  WINE_ENTRY: 20,
+  // Wine entry layout (used by both html.gs and pagination.gs)
+  WINE_ENTRY_MARGIN:  3,    // px, top and bottom each
+  WINE_ENTRY_PADDING: 1,    // px, top and bottom each
+  LINE_HEIGHT:        1.3,  // body line-height multiplier
+
+  // Heading layout
   SUBTEXT_LINE: 16,
   MIN_WINES_PER_SPLIT: 3,
-  HEADING_VERTICAL_PADDING: 20,
   RUXTON_FOOTER_ICON_SIZE: 18
 };
+
+/**
+ * Computes the effective rendered height of a single wine entry in points.
+ * Matches the CSS: margin-top + padding-top + (fontSize × lineHeight) + padding-bottom + margin-bottom
+ *
+ * @param {Object} wineEntry  Resolved wine entry settings (needs .size at minimum).
+ * @returns {number} Height in px/pt.
+ */
+function getWineEntryHeight(wineEntry) {
+  var m = ELEMENT_HEIGHTS.WINE_ENTRY_MARGIN;
+  var p = ELEMENT_HEIGHTS.WINE_ENTRY_PADDING;
+  return (m + p) * 2 + (wineEntry.size * ELEMENT_HEIGHTS.LINE_HEIGHT);
+}
 
 // ============================================================================
 // R365 / Data Import Mappings (unchanged)
