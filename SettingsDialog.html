@@ -302,22 +302,26 @@
 
   <!-- ======== FOOTER TAB ======== -->
   <div id="tab-footer" class="tab-content">
-    <h3>Footer Style</h3>
+    <h3>Page Number</h3>
     <div class="row">
-      <label>Style</label>
-      <select id="footer-style">
-        <option value="image">Decorative Image</option>
-        <option value="rule">Thin Rule</option>
-        <option value="ruxton">Ruxton Bar</option>
+      <label>Position</label>
+      <select id="footer-page-number-position">
+        <option value="center">Center</option>
+        <option value="outer">Outer edge (alternates for spreads)</option>
       </select>
     </div>
-    <div class="help-text">
-      "Decorative Image" uses the footer image as a full-width decorative border.
-      "Thin Rule" draws a simple line with the page number.
-      "Ruxton Bar" draws a double green bar with the page number and footer icon on the outer edge,
-      alternating for spread printing. Use an SVG footer image for best results — the SVG should have
-      explicit width and height attributes set to the intended display size (e.g. 20×20).
+    <div class="help-text">Center places the page number below the footer image. Outer places it on the left on verso pages and the right on recto pages.</div>
+
+    <h3>Decorative Rule</h3>
+    <div class="row">
+      <label>Style</label>
+      <select id="footer-rule">
+        <option value="none">None</option>
+        <option value="single">Single line</option>
+        <option value="double">Double line</option>
+      </select>
     </div>
+    <div class="help-text">Draws a horizontal rule above the footer area using the primary brand color. Applies across all pages.</div>
 
     <h3>Running Section Label</h3>
     <div class="checkbox-row">
@@ -882,9 +886,10 @@
   // ============================================================================
 
   function renderFooter(f) {
-    document.getElementById('footer-style').value            = f.style;
-    document.getElementById('show-running-label').checked    = f.showRunningLabel;
-    document.getElementById('running-label-position').value  = f.runningLabelPosition;
+    document.getElementById('footer-page-number-position').value = f.pageNumberPosition;
+    document.getElementById('footer-rule').value                 = f.footerRule;
+    document.getElementById('show-running-label').checked        = f.showRunningLabel;
+    document.getElementById('running-label-position').value      = f.runningLabelPosition;
   }
 
   function saveFooter() {
@@ -892,7 +897,8 @@
       .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
       .withFailureHandler(function(e) { showStatus('error', e.message); })
       .saveFooterSettings({
-        style:                val('footer-style'),
+        pageNumberPosition:   val('footer-page-number-position'),
+        footerRule:           val('footer-rule'),
         showRunningLabel:     document.getElementById('show-running-label').checked,
         runningLabelPosition: val('running-label-position')
       });
