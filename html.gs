@@ -128,7 +128,8 @@ function generateHTMLHead(assets, brand) {
       '            font-family: \'' + subFont + '\', \'Georgia\', serif;\n' +
       '            font-size: ' + ss.size + 'px;\n' +
       '            color: ' + ss.color + ';\n' +
-      '            font-weight: ' + ss.weight + ';\n';
+      '            font-weight: ' + ss.weight + ';\n' +
+      '            text-align: ' + ts.align + ';\n';
     subtextBlock += (ss.position === 'inline')
       ? '            display: inline;\n            margin-left: 8px;\n'
       : '            display: block;\n            margin-top: 2px;\n            margin-bottom: 6px;\n';
@@ -136,78 +137,88 @@ function generateHTMLHead(assets, brand) {
     headingCSSParts.push(subtextBlock);
   }
 
-  // --- Footer CSS ---
+// --- Footer CSS ---
+  var hasImage = !!(assets.footerImageUri && assets.footerImageUri.length > 0);
+
+  var numStyle =
+    'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
+    'font-size: 10px; ' +
+    'color: ' + col.primary + '; ' +
+    'vertical-align: middle;';
+
+  var ruleBorder = '';
+  var rulePadding = 'padding-top: 6px;';
+  if (foot.footerRule === 'single') {
+    ruleBorder = 'border-top: 1px solid ' + col.primary + ';';
+  } else if (foot.footerRule === 'double') {
+    ruleBorder = 'border-top: 3px double ' + col.primary + ';';
+  }
+  var ruleStyle     = ruleBorder + ' ' + (foot.footerRule !== 'none' ? rulePadding : '');
+  var ruleStyleFull = ruleStyle.trim();
+
+  var imageBg = hasImage
+    ? 'background-image: url(\'' + assets.footerImageUri + '\'); ' +
+      'background-repeat: no-repeat; ' +
+      'background-position: center center; ' +
+      'background-size: 90% auto;'
+    : '';
+
   var footerCSS;
-  if (foot.style === 'image') {
+
+  if (foot.pageNumberPosition === 'outer') {
     footerCSS =
       '\n        @page main-pages {\n' +
+      '            @bottom-left   { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
-      '                content: counter(page);\n' +
-      '                font-family: \'' + wineFont + '\', \'Georgia\', serif;\n' +
-      '                font-size: 10px;\n' +
-      '                color: ' + col.primary + ';\n' +
-      '                background-image: url(\'' + assets.footerImageUri + '\');\n' +
-      '                background-repeat: no-repeat;\n' +
-      '                background-position: center center;\n' +
-      '                background-size: 90% auto;\n' +
+      '                content: "";\n' +
+      '                ' + imageBg + '\n' +
+      '                ' + ruleStyleFull + '\n' +
       '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
-      '                padding-bottom: 0.1in;\n' +
-      '                display: flex;\n' +
-      '                align-items: center;\n' +
-      '                justify-content: center;\n' +
       '                width: 100%;\n' +
       '            }\n' +
-      '        }';
-
-  } else if (foot.style === 'ruxton') {
-    var ruxtonBar  = 'border-top: 3px double '    + col.primary + '; padding-top: 5px;';
-    var ruxtonTop  = 'border-bottom: 3px double ' + col.primary + '; padding-bottom: 5px;';
-    var ruxtonText = 'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
-                     'font-size: 9px; color: ' + col.primary + '; ' +
-                     'letter-spacing: 1px; vertical-align: top;';
-    footerCSS =
-      '\n        @page main-pages:right {\n' +
-      '            @top-left   { content: ""; ' + ruxtonTop + ' }\n' +
-      '            @top-center { content: ""; ' + ruxtonTop + ' }\n' +
-      '            @top-right  { content: ""; ' + ruxtonTop + ' }\n' +
-      '            @bottom-left   { content: ""; ' + ruxtonBar + ' }\n' +
-      '            @bottom-center { content: ""; ' + ruxtonBar + ' }\n' +
-      '            @bottom-right  {\n' +
-      '                content: counter(page) " | " url(\'' + assets.footerImageUri + '\');\n' +
-      '                ' + ruxtonBar + '\n' +
-      '                ' + ruxtonText + '\n' +
+      '            @bottom-right  { content: ""; ' + ruleStyleFull + ' }\n' +
+      '        }\n' +
+      '        @page main-pages:right {\n' +
+      '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
+      '            @bottom-right {\n' +
+      '                content: counter(page);\n' +
+      '                ' + numStyle + '\n' +
+      '                ' + ruleStyleFull + '\n' +
+      '                height: 0.4in;\n' +
+      '                padding-top: 0.15in;\n' +
       '                text-align: right;\n' +
       '            }\n' +
       '        }\n' +
       '        @page main-pages:left {\n' +
-      '            @top-left   { content: ""; ' + ruxtonTop + ' }\n' +
-      '            @top-center { content: ""; ' + ruxtonTop + ' }\n' +
-      '            @top-right  { content: ""; ' + ruxtonTop + ' }\n' +
-      '            @bottom-left   {\n' +
-      '                content: url(\'' + assets.footerImageUri + '\') " | " counter(page);\n' +
-      '                ' + ruxtonBar + '\n' +
-      '                ' + ruxtonText + '\n' +
+      '            @bottom-left {\n' +
+      '                content: counter(page);\n' +
+      '                ' + numStyle + '\n' +
+      '                ' + ruleStyleFull + '\n' +
+      '                height: 0.4in;\n' +
+      '                padding-top: 0.15in;\n' +
       '                text-align: left;\n' +
       '            }\n' +
-      '            @bottom-center { content: ""; ' + ruxtonBar + ' }\n' +
-      '            @bottom-right  { content: ""; ' + ruxtonBar + ' }\n' +
+      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
       '        }';
 
   } else {
-    // 'rule' — thin centred line with page number
+    // Center: background-image for decorative image, content for page number — both in @bottom-center
     footerCSS =
       '\n        @page main-pages {\n' +
+      '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
-      '                font-family: \'' + wineFont + '\', \'Georgia\', serif;\n' +
-      '                font-size: 10px;\n' +
-      '                color: ' + col.primary + ';\n' +
-      '                border-top: 1px solid ' + col.primary + ';\n' +
-      '                padding-top: 8px;\n' +
+      '                ' + numStyle + '\n' +
+      '                ' + imageBg + '\n' +
+      '                background-origin: content-box;\n' +
+      '                ' + ruleStyleFull + '\n' +
+      '                height: 0.4in;\n' +
+      '                padding-top: 0.15in;\n' +
+      '                padding-bottom: 0.1in;\n' +
       '                width: 100%;\n' +
       '                text-align: center;\n' +
       '            }\n' +
+      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
       '        }';
   }
 
@@ -325,9 +336,35 @@ function generateHTMLHead(assets, brand) {
     '            justify-content: space-between;\n',
     '        }\n',
     '        .toc-page-number { margin-left: 8px; }\n',
-    '        .toc-type-1 { font-weight: bold; font-size: 14px; margin-top: 12px; }\n',
-    '        .toc-type-2 { font-size: 12px; padding-left: 15px; margin-top: 4px; }\n',
-    '        .toc-type-3 { font-size: 11px; padding-left: 30px; margin-top: 2px; }\n\n',
+    '        .toc-type-1 {\n' +
+    '            font-size: 14px;\n' +
+    '            margin-top: 12px;\n' +
+    '            font-family: \'' + hs[2].title.font.replace(/\.[^.]+$/, '') + '\', \'Georgia\', serif;\n' +
+    '            font-weight: ' + hs[2].title.weight + ';\n' +
+    '            text-transform: ' + hs[2].title.transform + ';\n' +
+    '            font-variant-caps: ' + (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none' ? hs[2].title.variant : 'normal') + ';\n' +
+    '            letter-spacing: ' + hs[2].title.spacing + 'px;\n' +
+    '        }\n' +
+    '        .toc-type-2 {\n' +
+    '            font-size: 12px;\n' +
+    '            padding-left: 15px;\n' +
+    '            margin-top: 4px;\n' +
+    '            font-family: \'' + hs[2].title.font.replace(/\.[^.]+$/, '') + '\', \'Georgia\', serif;\n' +
+    '            font-weight: ' + hs[2].title.weight + ';\n' +
+    '            text-transform: ' + hs[2].title.transform + ';\n' +
+    '            font-variant-caps: ' + (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none' ? hs[2].title.variant : 'normal') + ';\n' +
+    '            letter-spacing: ' + hs[2].title.spacing + 'px;\n' +
+    '        }\n' +
+    '        .toc-type-3 {\n' +
+    '            font-size: 11px;\n' +
+    '            padding-left: 30px;\n' +
+    '            margin-top: 2px;\n' +
+    '            font-family: \'' + hs[2].title.font.replace(/\.[^.]+$/, '') + '\', \'Georgia\', serif;\n' +
+    '            font-weight: ' + hs[2].title.weight + ';\n' +
+    '            text-transform: ' + hs[2].title.transform + ';\n' +
+    '            font-variant-caps: ' + (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none' ? hs[2].title.variant : 'normal') + ';\n' +
+    '            letter-spacing: ' + hs[2].title.spacing + 'px;\n' +
+    '        }\n\n',
     '        /* Heading Styles (per type) */', headingCSSParts.join(''), '\n\n',
     '        /* Wine Entries */\n',
     '        .wine-entry {\n',
