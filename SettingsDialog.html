@@ -222,13 +222,29 @@
              onchange="document.getElementById('wine-color-pick').value=this.value; updateWinePreview()">
       <label>Weight</label>
       <select id="wine-weight" onchange="updateWinePreview()">
-        <option value="normal">Normal</option><option value="bold">Bold</option>
+        <option value="normal">Normal</option>
+        <option value="bold">Bold</option>
+        <option value="100">100 (Thin)</option>
+        <option value="200">200 (Extra Light)</option>
+        <option value="300">300 (Light)</option>
+        <option value="400">400</option>
+        <option value="500">500 (Medium)</option>
+        <option value="600">600 (Semi Bold)</option>
+        <option value="700">700</option>
+        <option value="800">800 (Extra Bold)</option>
+        <option value="900">900 (Black)</option>
       </select>
       <label>Style</label>
       <select id="wine-style" onchange="updateWinePreview()">
         <option value="normal">Normal</option><option value="italic">Italic</option>
       </select>
     </div>
+    <h3>Bin Number</h3>
+    <div class="checkbox-row">
+      <input type="checkbox" id="wine-show-bin">
+      <label for="wine-show-bin">Show bin number to the left of each wine entry (from "Bin" column)</label>
+    </div>
+    <div class="help-text">Displays the bin code left-aligned before the wine name. Values longer than 10 characters are truncated. Only visible when a variable-weight or appropriately styled font is in use.</div>
     <div class="font-preview-label">Preview</div>
     <div class="font-preview" id="wine-preview">Domaine de la Romanée-Conti, Burgundy — 245</div>
     <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveWineEntry()">Save Wine Entry Style</button></div>
@@ -302,6 +318,18 @@
 
   <!-- ======== FOOTER TAB ======== -->
   <div id="tab-footer" class="tab-content">
+    <h3>Footer Image</h3>
+    <div class="image-assign-block">
+      <div class="image-assign-row">
+        <label>Image</label>
+        <select id="footer-image-select" onchange="previewFooterImage()"></select>
+      </div>
+      <div class="img-thumb-wrap" id="footer-image-thumb-wrap">
+        <span class="no-thumb">No preview</span>
+      </div>
+    </div>
+    <div class="help-text">Select "None" to disable the footer image. Upload images in the Assets tab.</div>
+
     <h3>Page Number</h3>
     <div class="row">
       <label>Position</label>
@@ -319,6 +347,7 @@
         <option value="none">None</option>
         <option value="single">Single line</option>
         <option value="double">Double line</option>
+        <option value="double-both">Double line (top &amp; bottom)</option>
       </select>
     </div>
     <div class="help-text">Draws a horizontal rule above the footer area using the primary brand color. Applies across all pages.</div>
@@ -380,7 +409,7 @@
 
   var typeNames      = { 1: 'Type 1 — STYLE', 2: 'Type 2 — COUNTRY', 3: 'Type 3 — REGION', 4: 'Type 4 — APPELLATION' };
   var alignOptions   = ['left', 'center', 'right'];
-  var weightOptions  = ['normal', 'bold'];
+  var weightOptions  = ['normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
   var transformOpts  = ['none', 'uppercase', 'lowercase'];
   var variantOpts = ['normal', 'small-caps'];
   var underlineOpts  = ['none', 'text', 'partial', 'full'];
@@ -751,15 +780,17 @@
     document.getElementById('wine-color-hex').value   = we.color;
     document.getElementById('wine-weight').value      = we.weight;
     document.getElementById('wine-style').value       = we.style;
+    document.getElementById('wine-show-bin').checked  = !!we.showBin;
   }
 
   function saveWineEntry() {
     var obj = {
-      font:   val('wine-font'),
-      size:   val('wine-size'),
-      color:  val('wine-color-hex'),
-      weight: val('wine-weight'),
-      style:  val('wine-style')
+      font:    val('wine-font'),
+      size:    val('wine-size'),
+      color:   val('wine-color-hex'),
+      weight:  val('wine-weight'),
+      style:   val('wine-style'),
+      showBin: document.getElementById('wine-show-bin').checked
     };
     google.script.run
       .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
@@ -885,11 +916,36 @@
   // Footer
   // ============================================================================
 
+  function populateFooterImageSelect(currentImage) {
+    var sel = document.getElementById('footer-image-select');
+    if (!sel) return;
+    var opts = '<option value="">None</option>';
+    imagePool.forEach(function(f) {
+      opts += '<option value="' + f + '"' + (f === currentImage ? ' selected' : '') + '>' + f + '</option>';
+    });
+    sel.innerHTML = opts;
+    updateFooterImageThumb(currentImage);
+  }
+
+  function updateFooterImageThumb(fileName) {
+    var wrap = document.getElementById('footer-image-thumb-wrap');
+    if (!wrap) return;
+    var uri = fileName && assetUris.images && assetUris.images[fileName];
+    wrap.innerHTML = uri
+      ? '<img src="' + uri + '" style="max-height:40px; max-width:120px; object-fit:contain;">'
+      : '<span class="no-thumb">No preview</span>';
+  }
+
+  function previewFooterImage() {
+    updateFooterImageThumb(valSafe('footer-image-select'));
+  }
+
   function renderFooter(f) {
     document.getElementById('footer-page-number-position').value = f.pageNumberPosition;
     document.getElementById('footer-rule').value                 = f.footerRule;
     document.getElementById('show-running-label').checked        = f.showRunningLabel;
     document.getElementById('running-label-position').value      = f.runningLabelPosition;
+    populateFooterImageSelect(f.footerImage || '');
   }
 
   function saveFooter() {
@@ -900,7 +956,8 @@
         pageNumberPosition:   val('footer-page-number-position'),
         footerRule:           val('footer-rule'),
         showRunningLabel:     document.getElementById('show-running-label').checked,
-        runningLabelPosition: val('running-label-position')
+        runningLabelPosition: val('running-label-position'),
+        footerImage:          valSafe('footer-image-select') || ''
       });
   }
 

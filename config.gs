@@ -111,7 +111,7 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal'
+      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal', showBin: false
     },
     footer: {
       pageNumberPosition: 'center',
@@ -176,7 +176,7 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic'
+      font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic', showBin: false
     },
     footer: {
       pageNumberPosition: 'outer',

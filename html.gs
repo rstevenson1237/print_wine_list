@@ -48,7 +48,7 @@ function generateHTMLHead(assets, brand) {
       '\n        @font-face {\n' +
       '            font-family: \'' + familyName + '\';\n' +
       '            src: url(\'' + fontData.uri + '\') format(\'' + fontData.format + '\');\n' +
-      '            font-weight: normal;\n' +
+      '            font-weight: 100 900;\n' +
       '            font-style: normal;\n' +
       '            font-display: block;\n' +
       '        }'
@@ -146,15 +146,21 @@ function generateHTMLHead(assets, brand) {
     'color: ' + col.primary + '; ' +
     'vertical-align: middle;';
 
-  var ruleBorder = '';
-  var rulePadding = 'padding-top: 6px;';
+  var ruleBorder    = '';
+  var topRuleBorder = '';
+  var rulePadding   = 'padding-top: 6px;';
   if (foot.footerRule === 'single') {
     ruleBorder = 'border-top: 1px solid ' + col.primary + ';';
   } else if (foot.footerRule === 'double') {
     ruleBorder = 'border-top: 3px double ' + col.primary + ';';
+  } else if (foot.footerRule === 'double-both') {
+    ruleBorder    = 'border-top: 3px double ' + col.primary + ';';
+    topRuleBorder = 'border-bottom: 3px double ' + col.primary + '; padding-bottom: 6px;';
   }
   var ruleStyle     = ruleBorder + ' ' + (foot.footerRule !== 'none' ? rulePadding : '');
   var ruleStyleFull = ruleStyle.trim();
+  var topRuleStyleFull = topRuleBorder.trim();
+  var topBoxRule = topRuleStyleFull ? 'content: ""; ' + topRuleStyleFull : 'content: "";';
 
   var imageBg = hasImage
     ? 'background-image: url(\'' + assets.footerImageUri + '\'); ' +
@@ -168,6 +174,9 @@ function generateHTMLHead(assets, brand) {
   if (foot.pageNumberPosition === 'outer') {
     footerCSS =
       '\n        @page main-pages {\n' +
+      '            @top-left   { ' + topBoxRule + ' }\n' +
+      '            @top-center { ' + topBoxRule + ' }\n' +
+      '            @top-right  { ' + topBoxRule + ' }\n' +
       '            @bottom-left   { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: "";\n' +
@@ -180,31 +189,30 @@ function generateHTMLHead(assets, brand) {
       '        }\n' +
       '        @page main-pages:right {\n' +
       '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
-      '            @bottom-right {\n' +
+      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
+      '            @right-middle {\n' +
       '                content: counter(page);\n' +
       '                ' + numStyle + '\n' +
-      '                ' + ruleStyleFull + '\n' +
-      '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
       '                text-align: right;\n' +
       '            }\n' +
       '        }\n' +
       '        @page main-pages:left {\n' +
-      '            @bottom-left {\n' +
+      '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
+      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
+      '            @left-middle {\n' +
       '                content: counter(page);\n' +
       '                ' + numStyle + '\n' +
-      '                ' + ruleStyleFull + '\n' +
-      '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
       '                text-align: left;\n' +
       '            }\n' +
-      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
       '        }';
 
   } else {
     // Center: background-image for decorative image, content for page number — both in @bottom-center
     footerCSS =
       '\n        @page main-pages {\n' +
+      '            @top-left   { ' + topBoxRule + ' }\n' +
+      '            @top-center { ' + topBoxRule + ' }\n' +
+      '            @top-right  { ' + topBoxRule + ' }\n' +
       '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
@@ -380,7 +388,8 @@ function generateHTMLHead(assets, brand) {
     '            page-break-inside: avoid;\n',
     '        }\n',
     '        .wine-name-vintage { flex: 1; padding-right: 20px; }\n',
-    '        .wine-price { text-align: right; font-weight: 500; white-space: nowrap; }\n\n',
+    '        .wine-price { text-align: right; font-weight: 500; white-space: nowrap; }\n',
+    '        .wine-bin { width: 3.5em; min-width: 3.5em; padding-right: 8px; text-align: right; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; flex-shrink: 0; }\n\n',
     '        /* Running Labels */', runningLabelCSS, '\n\n',
     '        /* Page Breaks */\n',
     '        .main-content { page: main-pages; }\n',
@@ -537,9 +546,14 @@ function generateMainContent(sections, wineMap, pagination, brand) {
       var wine    = wines[w];
       var vintage = wine.vintage ? ' ' + wine.vintage : '';
       var price   = wine.price   ? Math.round(wine.price).toString() : '';
+      var showBin = brand.wineEntry.showBin;
+      var binStr  = showBin ? escapeHtml((wine.bin || '').toString().trim().slice(0, 10)) : '';
 
+      out.push('\n                <div class="wine-entry">');
+      if (showBin) {
+        out.push('<span class="wine-bin">', binStr, '</span>');
+      }
       out.push(
-        '\n                <div class="wine-entry">',
         '<span class="wine-name-vintage">', escapeHtml(wine.name), escapeHtml(vintage), '</span>',
         '<span class="wine-price">', price, '</span>',
         '</div>'

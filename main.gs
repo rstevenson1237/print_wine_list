@@ -57,13 +57,17 @@ function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
     svg: 'image/svg+xml', webp: 'image/webp'
   };
-  var footerExt  = extensionOf(imageSettings.footer);
+  // footerSettings.footerImage is authoritative (supports explicit empty = None)
+  var footerFileName = (footerSettings.footerImage !== undefined)
+    ? footerSettings.footerImage
+    : imageSettings.footer;
+  var footerExt  = extensionOf(footerFileName);
   var footerMime = imageMimeMap[footerExt] || 'image/png';
   var logoMime   = imageMimeMap[extensionOf(imageSettings.logo)] || 'image/png';
 
   // Load images from Drive
-  var footerImageUri = getFileAsDataUri(imageSettings.footer, footerMime);
-  var logoImageUri   = getFileAsDataUri(imageSettings.logo,   logoMime);
+  var footerImageUri = footerFileName ? getFileAsDataUri(footerFileName, footerMime) : '';
+  var logoImageUri   = getFileAsDataUri(imageSettings.logo, logoMime);
 
   // Resize SVG footer icons for the Ruxton Bar — CSS cannot resize content:url() images;
   // only the SVG's own width/height attributes control rendered size in @page margin boxes.
@@ -82,8 +86,8 @@ function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
   var fontUris = new Map();
   var missing  = [];
 
-  if (!footerImageUri) missing.push('Footer image (' + imageSettings.footer + ')');
-  if (!logoImageUri)   missing.push('Logo image ('   + imageSettings.logo   + ')');
+  if (footerFileName && !footerImageUri) missing.push('Footer image (' + footerFileName + ')');
+  if (!logoImageUri)                     missing.push('Logo image ('   + imageSettings.logo   + ')');
 
   fontFiles.forEach(function(fileName) {
     var ext = extensionOf(fileName);

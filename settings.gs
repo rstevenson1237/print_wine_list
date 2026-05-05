@@ -65,6 +65,7 @@ const PROP_KEYS = {
   WINE_COLOR:  'WINE_ENTRY_COLOR',
   WINE_WEIGHT: 'WINE_ENTRY_WEIGHT',
   WINE_STYLE:  'WINE_ENTRY_STYLE',
+  WINE_SHOW_BIN: 'WINE_ENTRY_SHOW_BIN',
 
   // Footer
   FOOTER_PAGE_NUMBER_POSITION: 'FOOTER_PAGE_NUMBER_POSITION',
@@ -316,11 +317,13 @@ function getFooterSettings(allProps, preset) {
   var p         = allProps || PropertiesService.getDocumentProperties().getProperties();
   var pr        = preset   || getActiveBrandPreset(p);
   var showLabel = p[PROP_KEYS.SHOW_RUNNING_LABEL];
+  var storedImage = p[PROP_KEYS.IMAGE_FOOTER];
   return {
     pageNumberPosition:   p[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] || pr.footer.pageNumberPosition,
     footerRule:           p[PROP_KEYS.FOOTER_RULE]                 || pr.footer.footerRule,
     showRunningLabel:     showLabel != null ? showLabel === 'true'  : pr.footer.showRunningLabel,
-    runningLabelPosition: p[PROP_KEYS.RUNNING_LABEL_POSITION]      || pr.footer.runningLabelPosition
+    runningLabelPosition: p[PROP_KEYS.RUNNING_LABEL_POSITION]      || pr.footer.runningLabelPosition,
+    footerImage:          storedImage != null ? storedImage : (pr.images.footer || '')
   };
 }
 
@@ -400,12 +403,14 @@ function getAllHeadingStyles(allProps, preset) {
 function getWineEntryStyle(allProps, preset) {
   var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
   var pr = preset   || getActiveBrandPreset(p);
+  var storedShowBin = p[PROP_KEYS.WINE_SHOW_BIN];
   return {
-    font:   p[PROP_KEYS.WINE_FONT]           || pr.wineEntry.font,
-    size:   parseInt(p[PROP_KEYS.WINE_SIZE]) || pr.wineEntry.size,
-    color:  p[PROP_KEYS.WINE_COLOR]          || pr.wineEntry.color,
-    weight: p[PROP_KEYS.WINE_WEIGHT]         || pr.wineEntry.weight,
-    style:  p[PROP_KEYS.WINE_STYLE]          || pr.wineEntry.style
+    font:    p[PROP_KEYS.WINE_FONT]           || pr.wineEntry.font,
+    size:    parseInt(p[PROP_KEYS.WINE_SIZE]) || pr.wineEntry.size,
+    color:   p[PROP_KEYS.WINE_COLOR]          || pr.wineEntry.color,
+    weight:  p[PROP_KEYS.WINE_WEIGHT]         || pr.wineEntry.weight,
+    style:   p[PROP_KEYS.WINE_STYLE]          || pr.wineEntry.style,
+    showBin: storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false)
   };
 }
 
@@ -517,11 +522,12 @@ function saveHeadingStyle(type, styleObj) {
 function saveWineEntryStyle(styleObj) {
   try {
     var p = PropertiesService.getDocumentProperties();
-    if (styleObj.font)   p.setProperty(PROP_KEYS.WINE_FONT,   styleObj.font);
-    if (styleObj.size)   p.setProperty(PROP_KEYS.WINE_SIZE,   styleObj.size.toString());
-    if (styleObj.color)  p.setProperty(PROP_KEYS.WINE_COLOR,  styleObj.color);
-    if (styleObj.weight) p.setProperty(PROP_KEYS.WINE_WEIGHT, styleObj.weight);
-    if (styleObj.style)  p.setProperty(PROP_KEYS.WINE_STYLE,  styleObj.style);
+    if (styleObj.font)              p.setProperty(PROP_KEYS.WINE_FONT,     styleObj.font);
+    if (styleObj.size)              p.setProperty(PROP_KEYS.WINE_SIZE,     styleObj.size.toString());
+    if (styleObj.color)             p.setProperty(PROP_KEYS.WINE_COLOR,    styleObj.color);
+    if (styleObj.weight)            p.setProperty(PROP_KEYS.WINE_WEIGHT,   styleObj.weight);
+    if (styleObj.style)             p.setProperty(PROP_KEYS.WINE_STYLE,    styleObj.style);
+    if (styleObj.showBin !== undefined) p.setProperty(PROP_KEYS.WINE_SHOW_BIN, styleObj.showBin.toString());
     return { success: true, message: 'Wine entry style saved.' };
   } catch (e) {
     return { success: false, message: e.toString() };
@@ -565,6 +571,9 @@ function saveFooterSettings(footerObj) {
     if (footerObj.footerRule         !== undefined) p.setProperty(PROP_KEYS.FOOTER_RULE,                 footerObj.footerRule);
     if (footerObj.showRunningLabel   !== undefined) p.setProperty(PROP_KEYS.SHOW_RUNNING_LABEL,          footerObj.showRunningLabel.toString());
     if (footerObj.runningLabelPosition !== undefined) p.setProperty(PROP_KEYS.RUNNING_LABEL_POSITION,    footerObj.runningLabelPosition);
+    if (footerObj.footerImage !== undefined) {
+      p.setProperty(PROP_KEYS.IMAGE_FOOTER, footerObj.footerImage || '');
+    }
     return { success: true, message: 'Footer settings saved.' };
   } catch (e) {
     return { success: false, message: e.toString() };
