@@ -147,11 +147,12 @@ function loadBrandPreset(brandName) {
     props[PROP_KEYS.WELCOME_LINE3]   = preset.welcome.line3;
 
     // Wine Entry
-    props[PROP_KEYS.WINE_FONT]   = preset.wineEntry.font;
-    props[PROP_KEYS.WINE_SIZE]   = preset.wineEntry.size.toString();
-    props[PROP_KEYS.WINE_COLOR]  = preset.wineEntry.color;
-    props[PROP_KEYS.WINE_WEIGHT] = preset.wineEntry.weight;
-    props[PROP_KEYS.WINE_STYLE]  = preset.wineEntry.style;
+    props[PROP_KEYS.WINE_FONT]     = preset.wineEntry.font;
+    props[PROP_KEYS.WINE_SIZE]     = preset.wineEntry.size.toString();
+    props[PROP_KEYS.WINE_COLOR]    = preset.wineEntry.color;
+    props[PROP_KEYS.WINE_WEIGHT]   = preset.wineEntry.weight;
+    props[PROP_KEYS.WINE_STYLE]    = preset.wineEntry.style;
+    props[PROP_KEYS.WINE_SHOW_BIN] = (preset.wineEntry.showBin || false).toString();
 
     // Footer
     props[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] = preset.footer.pageNumberPosition;
@@ -478,7 +479,8 @@ function getAllSettings() {
     welcome:       getWelcomeSettings(allProps, preset),
     footer:        getFooterSettings(allProps, preset),
     fontPool:      assets.fonts,
-    imagePool:     assets.images
+    imagePool:     assets.images,
+    googleFontsUrl: preset.googleFontsUrl || null
   };
 }
 

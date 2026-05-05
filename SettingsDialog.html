@@ -449,6 +449,9 @@
     // Inject @font-face rules so previews render correctly
     injectFontFaces(assets.fonts || {});
 
+    // Inject Google Fonts link for web-font presets (e.g., DEFAULT)
+    injectGoogleFontsLink(settings.googleFontsUrl);
+
     // Populate brand & page-size dropdowns
     populateSelect('brand-select', settings.brandPresets || [], settings.brandName);
     populateSelect('page-size-preset', settings.pageSizes || [], settings.pageSettings.sizePreset);
@@ -474,6 +477,18 @@
   // ============================================================================
   // Font Face Injection
   // ============================================================================
+
+  function injectGoogleFontsLink(url) {
+    if (!url) return;
+    var existingId = 'google-fonts-link';
+    var existing = document.getElementById(existingId);
+    if (existing) existing.parentNode.removeChild(existing);
+    var link = document.createElement('link');
+    link.id   = existingId;
+    link.rel  = 'stylesheet';
+    link.href = url;
+    document.head.appendChild(link);
+  }
 
   function injectFontFaces(fontsData) {
     var css = '';
@@ -578,6 +593,7 @@
   function _reInitSettings(settings) {
     fontPool  = settings.fontPool  || [];
     imagePool = settings.imagePool || [];
+    injectGoogleFontsLink(settings.googleFontsUrl);
     populateSelect('brand-select',    settings.brandPresets || [],      settings.brandName);
     populateSelect('page-size-preset',settings.pageSizes    || [],      settings.pageSettings.sizePreset);
     renderPageSettings(settings.pageSettings);
@@ -667,11 +683,15 @@
   }
 
   function buildFontRow(type, group, value) {
-    var id   = 'hs-' + type + '-' + group + '-font';
-    var ch   = ' onchange="updatePreview(' + type + ')"';
-    var opts = fontPool.map(function(f) {
+    var id     = 'hs-' + type + '-' + group + '-font';
+    var ch     = ' onchange="updatePreview(' + type + ')"';
+    var inPool = fontPool.indexOf(value) !== -1;
+    var opts   = fontPool.map(function(f) {
       return '<option value="' + f + '"' + (f === value ? ' selected' : '') + '>' + f + '</option>';
     }).join('');
+    if (!inPool && value) {
+      opts = '<option value="' + value + '" selected>' + value + ' ⇗ web</option>' + opts;
+    }
     return '<div class="row"><label>Font</label><select id="' + id + '"' + ch + '>' + opts + '</select></div>';
   }
 
@@ -1185,7 +1205,17 @@
   }
 
   function populateFontSelect(id, current) {
-    populateSelect(id, fontPool, current);
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    var inPool = fontPool.indexOf(current) !== -1;
+    var opts = fontPool.map(function(o) {
+      return '<option value="' + o + '"' + (o === current ? ' selected' : '') + '>' + o + '</option>';
+    }).join('');
+    // If the current font is a web font (not in the Drive pool), prepend it as a special option
+    if (!inPool && current) {
+      opts = '<option value="' + current + '" selected>' + current + ' ⇗ web</option>' + opts;
+    }
+    sel.innerHTML = opts || '<option value="">No fonts available</option>';
   }
 
   function showStatus(type, message) {

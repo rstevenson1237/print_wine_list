@@ -263,11 +263,18 @@ function generateHTMLHead(assets, brand) {
 
   // --- Assemble full output ---
   var titleHeadingFont = hs[1].title.font.replace(/\.[^.]+$/, '');
+  var googleFontsLinks = brand.googleFontsUrl
+    ? '    <link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+      '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+      '    <link rel="stylesheet" href="' + brand.googleFontsUrl + '">\n'
+    : '';
+
   var out = [
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n',
     '    <meta charset="UTF-8">\n',
     '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n',
     '    <title>Wine List</title>\n',
+    googleFontsLinks,
     '    <style>\n',
     '        /* Embedded Fonts */', fontFaceParts.join(''), '\n\n',
     '        /* Page Setup */\n',
@@ -415,7 +422,9 @@ function generateTitlePage(logoImageUri, brand) {
   var w    = brand.welcome;
   var out  = ['\n        <div class="title-page">\n'];
 
-  out.push('            <img src="' + logoImageUri + '" alt="Logo" class="logo">\n');
+  if (logoImageUri) {
+    out.push('            <img src="' + logoImageUri + '" alt="Logo" class="logo">\n');
+  }
 
   if (w.line1 || w.line2 || w.line3) {
     out.push('            <div class="welcome-text">\n');
