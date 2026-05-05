@@ -144,7 +144,7 @@ function generateHTMLHead(assets, brand) {
     'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
     'font-size: 10px; ' +
     'color: ' + col.primary + '; ' +
-    'vertical-align: middle;';
+    'vertical-align: top;';
 
   var ruleBorder    = '';
   var topRuleBorder = '';
@@ -201,7 +201,6 @@ function generateHTMLHead(assets, brand) {
       '                ' + numStyle + '\n' +
       '                ' + ruleStyleFull + '\n' +
       '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
       '                text-align: right;\n' +
       '            }\n' +
       '        }\n' +
@@ -211,7 +210,6 @@ function generateHTMLHead(assets, brand) {
       '                ' + numStyle + '\n' +
       '                ' + ruleStyleFull + '\n' +
       '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
       '                text-align: left;\n' +
       '            }\n' +
       '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
