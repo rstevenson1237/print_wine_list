@@ -159,7 +159,14 @@ function generateHTMLHead(assets, brand) {
   }
   var ruleStyle     = ruleBorder + ' ' + (foot.footerRule !== 'none' ? rulePadding : '');
   var ruleStyleFull = ruleStyle.trim();
-  var topRuleStyleFull = topRuleBorder.trim();
+
+  // When double-both is used with a header running label, the top rule is applied to
+  // the running-label element itself (as border-bottom) so the label appears ABOVE the rule.
+  // In that case the @top-* margin boxes should not draw their own rule.
+  var topLabelCarriesRule = (foot.footerRule === 'double-both' &&
+                             foot.showRunningLabel &&
+                             foot.runningLabelPosition === 'header');
+  var topRuleStyleFull = topLabelCarriesRule ? '' : topRuleBorder.trim();
   var topBoxRule = topRuleStyleFull ? 'content: ""; ' + topRuleStyleFull : 'content: "";';
 
   var imageBg = hasImage
@@ -189,21 +196,25 @@ function generateHTMLHead(assets, brand) {
       '        }\n' +
       '        @page main-pages:right {\n' +
       '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
-      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
-      '            @right-middle {\n' +
+      '            @bottom-right {\n' +
       '                content: counter(page);\n' +
       '                ' + numStyle + '\n' +
+      '                ' + ruleStyleFull + '\n' +
+      '                height: 0.4in;\n' +
+      '                padding-top: 0.15in;\n' +
       '                text-align: right;\n' +
       '            }\n' +
       '        }\n' +
       '        @page main-pages:left {\n' +
-      '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
-      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
-      '            @left-middle {\n' +
+      '            @bottom-left {\n' +
       '                content: counter(page);\n' +
       '                ' + numStyle + '\n' +
+      '                ' + ruleStyleFull + '\n' +
+      '                height: 0.4in;\n' +
+      '                padding-top: 0.15in;\n' +
       '                text-align: left;\n' +
       '            }\n' +
+      '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
       '        }';
 
   } else {
@@ -231,6 +242,12 @@ function generateHTMLHead(assets, brand) {
   }
 
   // --- Running label CSS ---
+  // When topLabelCarriesRule: the label renders ABOVE the rule (rule = label's border-bottom).
+  var labelBottomRule = topLabelCarriesRule
+    ? '            border-bottom: 3px double ' + col.primary + ';\n' +
+      '            padding-bottom: 8px;\n'
+    : '';
+
   var runningLabelCSS = '';
   if (foot.showRunningLabel) {
     if (foot.runningLabelPosition === 'header') {
@@ -242,6 +259,7 @@ function generateHTMLHead(assets, brand) {
         '            text-transform: uppercase;\n' +
         '            letter-spacing: 2px;\n' +
         '            margin-bottom: 10px;\n' +
+        labelBottomRule +
         '        }\n' +
         '        .running-label-left { text-align: left; }\n' +
         '        .running-label-right { text-align: right; }';
