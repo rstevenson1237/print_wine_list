@@ -412,7 +412,7 @@ function generateHTMLHead(assets, brand) {
     '        }\n',
     '        .wine-name-vintage { flex: 1; padding-right: 20px; }\n',
     '        .wine-price { text-align: right; font-weight: 500; white-space: nowrap; }\n',
-    '        .wine-bin { width: 3.5em; min-width: 3.5em; padding-right: 8px; text-align: right; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; flex-shrink: 0; }\n\n',
+    '        .wine-bin { width: 0.5in; min-width: 0.5in; padding-right: 10px; text-align: right; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; flex-shrink: 0; }\n\n',
     '        /* Running Labels */', runningLabelCSS, '\n\n',
     '        /* Page Breaks */\n',
     '        .main-content { page: main-pages; }\n',
