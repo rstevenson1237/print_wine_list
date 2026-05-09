@@ -280,6 +280,13 @@ function generateHTMLHead(assets, brand) {
 
   // --- Assemble full output ---
   var titleHeadingFont = hs[1].title.font.replace(/\.[^.]+$/, '');
+  // hs[2] style is shared by all three toc-type CSS classes — extract once.
+  var tocFont    = hs[2].title.font.replace(/\.[^.]+$/, '');
+  var tocWeight  = hs[2].title.weight;
+  var tocXform   = hs[2].title.transform;
+  var tocVariant = (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none')
+                     ? hs[2].title.variant : 'normal';
+  var tocSpacing = hs[2].title.spacing;
   var googleFontsLinks = brand.googleFontsUrl
     ? '    <link rel="preconnect" href="https://fonts.googleapis.com">\n' +
       '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
@@ -372,31 +379,31 @@ function generateHTMLHead(assets, brand) {
     '        .toc-type-1 {\n' +
     '            font-size: 14px;\n' +
     '            margin-top: 12px;\n' +
-    '            font-family: \'' + hs[2].title.font.replace(/\.[^.]+$/, '') + '\', \'Georgia\', serif;\n' +
-    '            font-weight: ' + hs[2].title.weight + ';\n' +
-    '            text-transform: ' + hs[2].title.transform + ';\n' +
-    '            font-variant-caps: ' + (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none' ? hs[2].title.variant : 'normal') + ';\n' +
-    '            letter-spacing: ' + hs[2].title.spacing + 'px;\n' +
+    '            font-family: \'' + tocFont + '\', \'Georgia\', serif;\n' +
+    '            font-weight: ' + tocWeight + ';\n' +
+    '            text-transform: ' + tocXform + ';\n' +
+    '            font-variant-caps: ' + tocVariant + ';\n' +
+    '            letter-spacing: ' + tocSpacing + 'px;\n' +
     '        }\n' +
     '        .toc-type-2 {\n' +
     '            font-size: 12px;\n' +
     '            padding-left: 15px;\n' +
     '            margin-top: 4px;\n' +
-    '            font-family: \'' + hs[2].title.font.replace(/\.[^.]+$/, '') + '\', \'Georgia\', serif;\n' +
-    '            font-weight: ' + hs[2].title.weight + ';\n' +
-    '            text-transform: ' + hs[2].title.transform + ';\n' +
-    '            font-variant-caps: ' + (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none' ? hs[2].title.variant : 'normal') + ';\n' +
-    '            letter-spacing: ' + hs[2].title.spacing + 'px;\n' +
+    '            font-family: \'' + tocFont + '\', \'Georgia\', serif;\n' +
+    '            font-weight: ' + tocWeight + ';\n' +
+    '            text-transform: ' + tocXform + ';\n' +
+    '            font-variant-caps: ' + tocVariant + ';\n' +
+    '            letter-spacing: ' + tocSpacing + 'px;\n' +
     '        }\n' +
     '        .toc-type-3 {\n' +
     '            font-size: 11px;\n' +
     '            padding-left: 30px;\n' +
     '            margin-top: 2px;\n' +
-    '            font-family: \'' + hs[2].title.font.replace(/\.[^.]+$/, '') + '\', \'Georgia\', serif;\n' +
-    '            font-weight: ' + hs[2].title.weight + ';\n' +
-    '            text-transform: ' + hs[2].title.transform + ';\n' +
-    '            font-variant-caps: ' + (hs[2].title.variant !== 'normal' && hs[2].title.transform === 'none' ? hs[2].title.variant : 'normal') + ';\n' +
-    '            letter-spacing: ' + hs[2].title.spacing + 'px;\n' +
+    '            font-family: \'' + tocFont + '\', \'Georgia\', serif;\n' +
+    '            font-weight: ' + tocWeight + ';\n' +
+    '            text-transform: ' + tocXform + ';\n' +
+    '            font-variant-caps: ' + tocVariant + ';\n' +
+    '            letter-spacing: ' + tocSpacing + 'px;\n' +
     '        }\n\n',
     '        /* Heading Styles (per type) */', headingCSSParts.join(''), '\n\n',
     '        /* Wine Entries */\n',
@@ -501,35 +508,40 @@ function generateTOCPage(tocData, brand) {
 function generateMainContent(sections, wineMap, pagination, brand) {
   var showLabel = brand.footer.showRunningLabel;
   var labelPos  = brand.footer.runningLabelPosition;
+  var showBin   = brand.wineEntry.showBin;   // constant for all wines — hoist outside loops
 
   var out = [
     '\n        <main class="main-content">\n',
     '            <div class="wine-content">'
   ];
 
-  var currentType1Label = '';
-  var pageNumber        = 1;   // content-page counter for left/right label alternation
+  var currentType1Label        = '';
+  var currentType1LabelEscaped = '';   // pre-escaped; updated only when a Type-1 section is seen
+  var pageNumber               = 1;   // content-page counter for left/right label alternation
 
   for (var s = 0; s < sections.length; s++) {
     var section   = sections[s];
     var typeLevel = section.type;
     var hsStyle   = brand.headingStyles[typeLevel];
 
-    if (typeLevel === 1) currentType1Label = section.title;
+    if (typeLevel === 1) {
+      currentType1Label        = section.title;
+      currentType1LabelEscaped = escapeHtml(section.title);
+    }
 
     // --- Section-level page break ---
     if (pagination.pageBreaks.has(s)) {
-      if (showLabel && labelPos === 'footer' && currentType1Label) {
+      if (showLabel && labelPos === 'footer' && currentType1LabelEscaped) {
         var fa = (pageNumber % 2 === 0) ? 'left' : 'right';
         out.push('\n                <div class="running-label running-label-', fa, '">',
-          escapeHtml(currentType1Label), '</div>');
+          currentType1LabelEscaped, '</div>');
       }
       out.push('\n                <div class="manual-page-break"></div>');
       pageNumber++;
-      if (showLabel && labelPos === 'header' && currentType1Label) {
+      if (showLabel && labelPos === 'header' && currentType1LabelEscaped) {
         var ha = (pageNumber % 2 === 0) ? 'left' : 'right';
         out.push('\n                <div class="running-label running-label-', ha, '">',
-          escapeHtml(currentType1Label), '</div>');
+          currentType1LabelEscaped, '</div>');
       }
     }
 
@@ -563,24 +575,23 @@ function generateMainContent(sections, wineMap, pagination, brand) {
 
       // Wine-level page break
       if (wineBreaks && wineBreaks.has(w)) {
-        if (showLabel && labelPos === 'footer' && currentType1Label) {
+        if (showLabel && labelPos === 'footer' && currentType1LabelEscaped) {
           var wfa = (pageNumber % 2 === 0) ? 'left' : 'right';
           out.push('\n                <div class="running-label running-label-', wfa, '">',
-            escapeHtml(currentType1Label), '</div>');
+            currentType1LabelEscaped, '</div>');
         }
         out.push('\n                <div class="manual-page-break"></div>');
         pageNumber++;
-        if (showLabel && labelPos === 'header' && currentType1Label) {
+        if (showLabel && labelPos === 'header' && currentType1LabelEscaped) {
           var wha = (pageNumber % 2 === 0) ? 'left' : 'right';
           out.push('\n                <div class="running-label running-label-', wha, '">',
-            escapeHtml(currentType1Label), '</div>');
+            currentType1LabelEscaped, '</div>');
         }
       }
 
       var wine    = wines[w];
       var vintage = wine.vintage ? ' ' + wine.vintage : '';
       var price   = wine.price   ? Math.round(wine.price).toString() : '';
-      var showBin = brand.wineEntry.showBin;
       var binStr  = showBin ? escapeHtml((wine.bin || '').toString().trim().slice(0, 10)) : '';
 
       out.push('\n                <div class="wine-entry">');

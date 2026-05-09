@@ -65,10 +65,46 @@ function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
   var footerMime = imageMimeMap[footerExt] || 'image/png';
   var logoMime   = imageMimeMap[extensionOf(imageSettings.logo)] || 'image/png';
 
+  // --- Single Drive folder scan ---
+  // Build a filename→File map once so every asset lookup is O(1) instead of
+  // re-traversing the folder (a separate Drive API call) for each file.
+  var fileMap = {};
+  try {
+    var ssFile  = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId());
+    var parents = ssFile.getParents();
+    if (parents.hasNext()) {
+      var folderIter = parents.next().getFiles();
+      while (folderIter.hasNext()) {
+        var f = folderIter.next();
+        fileMap[f.getName()] = f;
+      }
+    }
+  } catch (e) {
+    Logger.log('loadAssets: folder scan failed (' + e + '), will fall back to per-file search');
+  }
+
+  // Local helper: look up by name from the pre-built map; fall back to global Drive search.
+  function fileToDataUri_(fileName, mimeType) {
+    try {
+      var file = fileMap[fileName] || null;
+      if (!file) {
+        var iter = DriveApp.getFilesByName(fileName);
+        if (iter.hasNext()) file = iter.next();
+      }
+      if (!file) { Logger.log('loadAssets: not found: ' + fileName); return null; }
+      var blob = file.getBlob();
+      return 'data:' + (mimeType || blob.getContentType()) + ';base64,' +
+             Utilities.base64Encode(blob.getBytes());
+    } catch (e) {
+      Logger.log('loadAssets: error loading "' + fileName + '": ' + e);
+      return null;
+    }
+  }
+
   // Load images from Drive (empty filename = intentionally disabled)
   var logoFileName   = imageSettings.logo || '';
-  var footerImageUri = footerFileName ? getFileAsDataUri(footerFileName, footerMime) : '';
-  var logoImageUri   = logoFileName   ? getFileAsDataUri(logoFileName,   logoMime)   : '';
+  var footerImageUri = footerFileName ? fileToDataUri_(footerFileName, footerMime) : '';
+  var logoImageUri   = logoFileName   ? fileToDataUri_(logoFileName,   logoMime)   : '';
 
   // Resize SVG footer icons for the Ruxton Bar — CSS cannot resize content:url() images;
   // only the SVG's own width/height attributes control rendered size in @page margin boxes.
@@ -93,7 +129,7 @@ function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
   fontFiles.forEach(function(fileName) {
     if (fileName.indexOf('.') === -1) return; // web font — no Drive lookup needed
     var ext = extensionOf(fileName);
-    var uri = getFileAsDataUri(fileName, getMimeForExtension(ext));
+    var uri = fileToDataUri_(fileName, getMimeForExtension(ext));
     if (uri) {
       fontUris.set(fileName, { uri: uri, format: getFontFormatForExtension(ext) });
     } else {

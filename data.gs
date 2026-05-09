@@ -86,15 +86,18 @@ function prepareWineListData() {
  * @returns {Array<Object>} Ordered section descriptors:
  *   { code, type, title, subtext, forceNewPage }
  */
-function getSectionData() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.SECTIONS);
+function getSectionData(sheet) {
   if (!sheet) {
     SpreadsheetApp.getUi().alert('Error: Sheet "' + SHEETS.SECTIONS + '" not found.');
-    return null;
+    return [];
   }
 
-  var data = sheet.getDataRange().getValues();
-  if (data.length < 2) return [];   // header row only
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];   // header row only
+
+  // Read only the 5 columns this function actually parses (A–E),
+  // up to the last row with data — avoids loading empty trailing rows.
+  var data = sheet.getRange(1, 1, lastRow, 5).getValues();
 
   var sections = [];
 
@@ -174,7 +177,7 @@ function resolveType_(raw) {
  */
 function getWineData(sheet) {
   var lastRow = sheet.getLastRow();
-  var lastCol = sheet.getLastCol ? sheet.getLastColumn() : sheet.getLastColumn();
+  var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol < 3) return [];
 
   var allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();

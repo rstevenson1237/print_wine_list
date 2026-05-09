@@ -37,11 +37,14 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
   var winePageBreaks = new Map();
   var tocPageNumbers = new Map();
 
+  // Cache for estimateHeadingHeight — at most 8 unique values (4 types × 2 subtext states).
+  var headingHeightCache = {};
+
   for (var s = 0; s < sections.length; s++) {
     var section    = sections[s];
     var typeLevel  = section.type;
 
-    var headingHeight = estimateHeadingHeight(typeLevel, section.subtext, headingStyles);
+    var headingHeight = estimateHeadingHeight(typeLevel, section.subtext, headingStyles, headingHeightCache);
     var wines         = (section.code > 0 && wineMap.has(section.code)) ? wineMap.get(section.code) : [];
     var wineHeight    = wines.length * wineEntryHeight;
     var totalHeight   = headingHeight + wineHeight;
@@ -131,7 +134,11 @@ function buildTOCData(sections, tocPageNumbers) {
 // Internal Helpers (unchanged)
 // ============================================================================
 
-function estimateHeadingHeight(typeLevel, subtext, headingStyles) {
+function estimateHeadingHeight(typeLevel, subtext, headingStyles, cache) {
+  // Memoize by (type, hasSubtext) — only 8 possible values across all sections.
+  var cacheKey = typeLevel + ':' + (subtext ? '1' : '0');
+  if (cache && cacheKey in cache) return cache[cacheKey];
+
   var style = headingStyles[typeLevel];
   if (!style) return 30;
 
@@ -153,7 +160,10 @@ function estimateHeadingHeight(typeLevel, subtext, headingStyles) {
       subtextHeight = 4; // inline — no extra block height
     }
   }
-  return titleHeight + subtextHeight;
+
+  var result = titleHeight + subtextHeight;
+  if (cache) cache[cacheKey] = result;
+  return result;
 }
 
 /**
