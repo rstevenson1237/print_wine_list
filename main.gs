@@ -174,7 +174,7 @@ function generateWineList() {
 
   // Step 5: Calculate pagination
   showToast('Calculating pagination...');
-  var pagination = calculatePagination(data.sections, data.wineMap, brand.headingStyles, pageConfig, wineEntry);
+  var pagination = calculatePagination(data.sections, data.wineMap, brand.headingStyles, pageConfig, wineEntry, footerSettings);
 
   // Step 6: Build TOC data
   pagination.tocData = buildTOCData(data.sections, pagination.tocPageNumbers);

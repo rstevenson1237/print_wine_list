@@ -288,7 +288,7 @@ function getPageConfig(allProps, preset) {
     MARGIN_INNER:  parseFloat(p[PROP_KEYS.PAGE_MARGIN_INNER])  || pr.page.marginInner,
     MARGIN_OUTER:  parseFloat(p[PROP_KEYS.PAGE_MARGIN_OUTER])  || pr.page.marginOuter,
     PAGE_BUFFER:   parseInt(p[PROP_KEYS.PAGE_BUFFER])          || pr.page.pageBuffer,
-    PPI: 72,
+    PPI: 96,
     FRONT_MATTER_PAGES: parseInt(p[PROP_KEYS.FRONT_MATTER_PAGES]) || pr.frontMatterPages
   };
 
@@ -312,10 +312,12 @@ const ELEMENT_HEIGHTS = {
   WINE_ENTRY_PADDING: 1,    // px, top and bottom each
   LINE_HEIGHT:        1.3,  // body line-height multiplier
 
-  // Heading layout
-  SUBTEXT_LINE: 16,
+  // Heading layout — subtext 'below' height is computed dynamically in estimateHeadingHeight
   MIN_WINES_PER_SPLIT: 3,
-  RUXTON_FOOTER_ICON_SIZE: 18
+  RUXTON_FOOTER_ICON_SIZE: 18,
+
+  // Running label (header position): font-size 9px × LINE_HEIGHT + margin-bottom 10px
+  RUNNING_LABEL_HEADER: Math.round(9 * 1.3) + 10  // = 22px
 };
 
 /**

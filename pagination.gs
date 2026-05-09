@@ -20,10 +20,15 @@
  * @param {Object} pageConfig From getPageConfig().
  * @returns {Object}
  */
-function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineEntry) {
+function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineEntry, footerSettings) {
   var usableHeight      = pageConfig.getUsableHeightPts() - pageConfig.PAGE_BUFFER;
   var frontMatterOffset = pageConfig.FRONT_MATTER_PAGES;
   var wineEntryHeight   = getWineEntryHeight(wineEntry);
+
+  // Running label (header position) consumes space at the top of every page after the first.
+  var runningLabelHeight = (footerSettings && footerSettings.showRunningLabel &&
+                            footerSettings.runningLabelPosition === 'header')
+    ? ELEMENT_HEIGHTS.RUNNING_LABEL_HEADER : 0;
 
   var currentHeight = 0;
   var currentPage   = 1;
@@ -46,7 +51,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
     if (isForced && (currentHeight > 0 || currentPage > 1)) {
       pageBreaks.add(s);
       currentPage++;
-      currentHeight = 0;
+      currentHeight = runningLabelHeight;
     }
 
     // Rule 2: Does the section fit?
@@ -60,7 +65,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
     } else if (currentHeight > 0 && fitsOnEmptyPage) {
       pageBreaks.add(s);
       currentPage++;
-      currentHeight = 0;
+      currentHeight = runningLabelHeight;
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
 
@@ -68,16 +73,16 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
       if (currentHeight > 0) {
         pageBreaks.add(s);
         currentPage++;
-        currentHeight = 0;
+        currentHeight = runningLabelHeight;
       }
 
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
 
       if (wines.length === 0) {
-        currentHeight = headingHeight;
+        currentHeight += headingHeight;
       } else {
         var splitResult = splitOversizedSection_(
-          headingHeight, wines.length, usableHeight, currentPage, wineEntryHeight
+          headingHeight, wines.length, usableHeight, currentPage, wineEntryHeight, runningLabelHeight
         );
         winePageBreaks.set(s, splitResult.breaks);
         currentPage   = splitResult.endPage;
@@ -141,8 +146,12 @@ function estimateHeadingHeight(typeLevel, subtext, headingStyles) {
 
   var subtextHeight = 0;
   if (subtext) {
-    subtextHeight = (style.subtext.position === 'below') ?
-      ELEMENT_HEIGHTS.SUBTEXT_LINE : 4;
+    if (style.subtext.position === 'below') {
+      // Matches .subtext-type-X CSS: margin-top:2px + font-size*LINE_HEIGHT + margin-bottom:6px
+      subtextHeight = 2 + Math.round(style.subtext.size * ELEMENT_HEIGHTS.LINE_HEIGHT) + 6;
+    } else {
+      subtextHeight = 4; // inline — no extra block height
+    }
   }
   return titleHeight + subtextHeight;
 }
@@ -165,12 +174,13 @@ function recordTOCEntry_(section, displayPage, tocMap, sectionIndex) {
   tocMap.set(key, displayPage);
 }
 
-function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight) {
+function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight, runningLabelHeight) {
   var breaks = new Set();
   var currentPage = startPage;
   var currentHeight = headingHeight;
   var winesOnCurrentPage = 0;
   var minWines = ELEMENT_HEIGHTS.MIN_WINES_PER_SPLIT;
+  var labelHeight = runningLabelHeight || 0;
 
   for (var w = 0; w < wineCount; w++) {
     var wouldFit = (currentHeight + wineEntryHeight) <= usableHeight;
@@ -179,7 +189,7 @@ function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPag
     if (!wouldFit && hasMinimum) {
       breaks.add(w);
       currentPage++;
-      currentHeight = 0;
+      currentHeight = labelHeight;
       winesOnCurrentPage = 0;
     }
 

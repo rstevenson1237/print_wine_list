@@ -140,11 +140,12 @@ function generateHTMLHead(assets, brand) {
 // --- Footer CSS ---
   var hasImage = !!(assets.footerImageUri && assets.footerImageUri.length > 0);
 
-  var numStyle =
+  var numStyleBase =
     'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
     'font-size: 10px; ' +
-    'color: ' + col.primary + '; ' +
-    'vertical-align: top;';
+    'color: ' + col.primary + '; ';
+  var numStyle       = numStyleBase + 'vertical-align: top;';
+  var numStyleCenter = numStyleBase + 'vertical-align: middle;';
 
   var ruleBorder    = '';
   var topRuleBorder = '';
@@ -225,7 +226,7 @@ function generateHTMLHead(assets, brand) {
       '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
-      '                ' + numStyle + '\n' +
+      '                ' + numStyleCenter + '\n' +
       '                ' + imageBg + '\n' +
       '                background-origin: content-box;\n' +
       '                ' + ruleStyleFull + '\n' +
@@ -359,7 +360,8 @@ function generateHTMLHead(assets, brand) {
     '            text-align: center;\n',
     '            margin-bottom: 30px;\n',
     '        }\n',
-    '        .toc-list { list-style: none; columns: 2; column-gap: 40px; }\n',
+    '        .toc-list { display: flex; gap: 40px; align-items: flex-start; }\n' +
+    '        .toc-col { flex: 1; }\n',
     '        .toc-list a {\n',
     '            text-decoration: none;\n',
     '            color: ', col.text, ';\n',
@@ -465,20 +467,27 @@ function generateTitlePage(logoImageUri, brand) {
 // ============================================================================
 
 function generateTOCPage(tocData, brand) {
+  var split = Math.ceil(tocData.length / 2);
+  var cols  = [tocData.slice(0, split), tocData.slice(split)];
+
   var out = [
     '\n        <div class="toc-page">\n',
     '            <h2>Table of Contents</h2>\n',
     '            <div class="toc-list">'
   ];
 
-  tocData.forEach(function(entry) {
-    var pageNum = entry.pageNumber
-      ? '<span class="toc-page-number">' + entry.pageNumber + '</span>'
-      : '';
-    out.push(
-      '\n                <div class="toc-type-', entry.type, '">',
-      '<a href="#', entry.slug, '">', escapeHtml(entry.title), pageNum, '</a></div>'
-    );
+  cols.forEach(function(col) {
+    out.push('\n                <div class="toc-col">');
+    col.forEach(function(entry) {
+      var pageNum = entry.pageNumber
+        ? '<span class="toc-page-number">' + entry.pageNumber + '</span>'
+        : '';
+      out.push(
+        '\n                    <div class="toc-type-', entry.type, '">',
+        '<a href="#', entry.slug, '">', escapeHtml(entry.title), pageNum, '</a></div>'
+      );
+    });
+    out.push('\n                </div>');
   });
 
   out.push('\n            </div>\n        </div>');
