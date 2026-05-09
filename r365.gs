@@ -622,6 +622,11 @@ function updateDataFromCSV(dataSheet, listSheet, csvData, headerMap, options = {
   const batchItemMap     = {};
   let updatedCount       = 0;
 
+  const dateCsvHeader   = Object.keys(headerMap).find(k => headerMap[k] === 'LastPurchase');
+  const csvDateColIdx   = dateCsvHeader ? csvHeaders.indexOf(dateCsvHeader) : -1;
+  const sheetDateColIdx = sheetHeaders.indexOf('LastPurchase');
+  const batchDateMap    = {};
+
   for (let i = 1; i < csvData.length; i++) {
     const csvRow = csvData[i];
 
@@ -637,6 +642,13 @@ function updateDataFromCSV(dataSheet, listSheet, csvData, headerMap, options = {
     const existingRowIndex = itemMap[trimmedName];
 
     if (existingRowIndex !== undefined) {
+      if (csvDateColIdx > -1 && sheetDateColIdx > -1) {
+        const existingDate = new Date(sheetData[existingRowIndex][sheetDateColIdx]);
+        const csvDate      = new Date(csvRow[csvDateColIdx]);
+        if (!isNaN(existingDate.getTime()) && !isNaN(csvDate.getTime()) && csvDate < existingDate) {
+          continue;
+        }
+      }
       for (const csvHeader in headerMap) {
         const sheetHeader  = headerMap[csvHeader];
         const sheetColIndex = sheetHeaders.indexOf(sheetHeader);
@@ -648,6 +660,12 @@ function updateDataFromCSV(dataSheet, listSheet, csvData, headerMap, options = {
       updatedCount++;
 
     } else if (batchItemMap[trimmedName] !== undefined) {
+      if (csvDateColIdx > -1) {
+        const csvDate  = new Date(csvRow[csvDateColIdx]);
+        const bestDate = batchDateMap[trimmedName];
+        if (!isNaN(csvDate.getTime()) && bestDate && csvDate <= bestDate) continue;
+        if (!isNaN(csvDate.getTime())) batchDateMap[trimmedName] = csvDate;
+      }
       const batchIndex = batchItemMap[trimmedName];
       for (const csvHeader in headerMap) {
         const sheetHeader   = headerMap[csvHeader];
@@ -667,6 +685,10 @@ function updateDataFromCSV(dataSheet, listSheet, csvData, headerMap, options = {
         if (sheetColIndex > -1 && csvColIndex > -1 && csvRow[csvColIndex] !== undefined) {
           newRow[sheetColIndex] = csvRow[csvColIndex];
         }
+      }
+      if (csvDateColIdx > -1) {
+        const csvDate = new Date(csvRow[csvDateColIdx]);
+        if (!isNaN(csvDate.getTime())) batchDateMap[trimmedName] = csvDate;
       }
       batchItemMap[trimmedName] = dataRowsToAppend.length;
       dataRowsToAppend.push(newRow);

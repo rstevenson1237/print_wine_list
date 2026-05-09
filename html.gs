@@ -48,7 +48,7 @@ function generateHTMLHead(assets, brand) {
       '\n        @font-face {\n' +
       '            font-family: \'' + familyName + '\';\n' +
       '            src: url(\'' + fontData.uri + '\') format(\'' + fontData.format + '\');\n' +
-      '            font-weight: normal;\n' +
+      '            font-weight: 100 900;\n' +
       '            font-style: normal;\n' +
       '            font-display: block;\n' +
       '        }'
@@ -144,17 +144,30 @@ function generateHTMLHead(assets, brand) {
     'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
     'font-size: 10px; ' +
     'color: ' + col.primary + '; ' +
-    'vertical-align: middle;';
+    'vertical-align: top;';
 
-  var ruleBorder = '';
-  var rulePadding = 'padding-top: 6px;';
+  var ruleBorder    = '';
+  var topRuleBorder = '';
+  var rulePadding   = 'padding-top: 6px;';
   if (foot.footerRule === 'single') {
     ruleBorder = 'border-top: 1px solid ' + col.primary + ';';
   } else if (foot.footerRule === 'double') {
     ruleBorder = 'border-top: 3px double ' + col.primary + ';';
+  } else if (foot.footerRule === 'double-both') {
+    ruleBorder    = 'border-top: 3px double ' + col.primary + ';';
+    topRuleBorder = 'border-bottom: 3px double ' + col.primary + '; padding-bottom: 6px;';
   }
   var ruleStyle     = ruleBorder + ' ' + (foot.footerRule !== 'none' ? rulePadding : '');
   var ruleStyleFull = ruleStyle.trim();
+
+  // When double-both is used with a header running label, the top rule is applied to
+  // the running-label element itself (as border-bottom) so the label appears ABOVE the rule.
+  // In that case the @top-* margin boxes should not draw their own rule.
+  var topLabelCarriesRule = (foot.footerRule === 'double-both' &&
+                             foot.showRunningLabel &&
+                             foot.runningLabelPosition === 'header');
+  var topRuleStyleFull = topLabelCarriesRule ? '' : topRuleBorder.trim();
+  var topBoxRule = topRuleStyleFull ? 'content: ""; ' + topRuleStyleFull : 'content: "";';
 
   var imageBg = hasImage
     ? 'background-image: url(\'' + assets.footerImageUri + '\'); ' +
@@ -168,6 +181,9 @@ function generateHTMLHead(assets, brand) {
   if (foot.pageNumberPosition === 'outer') {
     footerCSS =
       '\n        @page main-pages {\n' +
+      '            @top-left   { ' + topBoxRule + ' }\n' +
+      '            @top-center { ' + topBoxRule + ' }\n' +
+      '            @top-right  { ' + topBoxRule + ' }\n' +
       '            @bottom-left   { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: "";\n' +
@@ -185,7 +201,6 @@ function generateHTMLHead(assets, brand) {
       '                ' + numStyle + '\n' +
       '                ' + ruleStyleFull + '\n' +
       '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
       '                text-align: right;\n' +
       '            }\n' +
       '        }\n' +
@@ -195,7 +210,6 @@ function generateHTMLHead(assets, brand) {
       '                ' + numStyle + '\n' +
       '                ' + ruleStyleFull + '\n' +
       '                height: 0.4in;\n' +
-      '                padding-top: 0.15in;\n' +
       '                text-align: left;\n' +
       '            }\n' +
       '            @bottom-right { content: ""; ' + ruleStyleFull + ' }\n' +
@@ -205,6 +219,9 @@ function generateHTMLHead(assets, brand) {
     // Center: background-image for decorative image, content for page number — both in @bottom-center
     footerCSS =
       '\n        @page main-pages {\n' +
+      '            @top-left   { ' + topBoxRule + ' }\n' +
+      '            @top-center { ' + topBoxRule + ' }\n' +
+      '            @top-right  { ' + topBoxRule + ' }\n' +
       '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
@@ -223,6 +240,12 @@ function generateHTMLHead(assets, brand) {
   }
 
   // --- Running label CSS ---
+  // When topLabelCarriesRule: the label renders ABOVE the rule (rule = label's border-bottom).
+  var labelBottomRule = topLabelCarriesRule
+    ? '            border-bottom: 3px double ' + col.primary + ';\n' +
+      '            padding-bottom: 8px;\n'
+    : '';
+
   var runningLabelCSS = '';
   if (foot.showRunningLabel) {
     if (foot.runningLabelPosition === 'header') {
@@ -234,6 +257,7 @@ function generateHTMLHead(assets, brand) {
         '            text-transform: uppercase;\n' +
         '            letter-spacing: 2px;\n' +
         '            margin-bottom: 10px;\n' +
+        labelBottomRule +
         '        }\n' +
         '        .running-label-left { text-align: left; }\n' +
         '        .running-label-right { text-align: right; }';
@@ -255,11 +279,18 @@ function generateHTMLHead(assets, brand) {
 
   // --- Assemble full output ---
   var titleHeadingFont = hs[1].title.font.replace(/\.[^.]+$/, '');
+  var googleFontsLinks = brand.googleFontsUrl
+    ? '    <link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+      '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+      '    <link rel="stylesheet" href="' + brand.googleFontsUrl + '">\n'
+    : '';
+
   var out = [
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n',
     '    <meta charset="UTF-8">\n',
     '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n',
     '    <title>Wine List</title>\n',
+    googleFontsLinks,
     '    <style>\n',
     '        /* Embedded Fonts */', fontFaceParts.join(''), '\n\n',
     '        /* Page Setup */\n',
@@ -380,7 +411,8 @@ function generateHTMLHead(assets, brand) {
     '            page-break-inside: avoid;\n',
     '        }\n',
     '        .wine-name-vintage { flex: 1; padding-right: 20px; }\n',
-    '        .wine-price { text-align: right; font-weight: 500; white-space: nowrap; }\n\n',
+    '        .wine-price { text-align: right; font-weight: 500; white-space: nowrap; }\n',
+    '        .wine-bin { width: 0.5in; min-width: 0.5in; padding-right: 10px; text-align: right; font-variant-numeric: tabular-nums; overflow: hidden; white-space: nowrap; flex-shrink: 0; }\n\n',
     '        /* Running Labels */', runningLabelCSS, '\n\n',
     '        /* Page Breaks */\n',
     '        .main-content { page: main-pages; }\n',
@@ -406,7 +438,9 @@ function generateTitlePage(logoImageUri, brand) {
   var w    = brand.welcome;
   var out  = ['\n        <div class="title-page">\n'];
 
-  out.push('            <img src="' + logoImageUri + '" alt="Logo" class="logo">\n');
+  if (logoImageUri) {
+    out.push('            <img src="' + logoImageUri + '" alt="Logo" class="logo">\n');
+  }
 
   if (w.line1 || w.line2 || w.line3) {
     out.push('            <div class="welcome-text">\n');
@@ -537,9 +571,14 @@ function generateMainContent(sections, wineMap, pagination, brand) {
       var wine    = wines[w];
       var vintage = wine.vintage ? ' ' + wine.vintage : '';
       var price   = wine.price   ? Math.round(wine.price).toString() : '';
+      var showBin = brand.wineEntry.showBin;
+      var binStr  = showBin ? escapeHtml((wine.bin || '').toString().trim().slice(0, 10)) : '';
 
+      out.push('\n                <div class="wine-entry">');
+      if (showBin) {
+        out.push('<span class="wine-bin">', binStr, '</span>');
+      }
       out.push(
-        '\n                <div class="wine-entry">',
         '<span class="wine-name-vintage">', escapeHtml(wine.name), escapeHtml(vintage), '</span>',
         '<span class="wine-price">', price, '</span>',
         '</div>'

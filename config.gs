@@ -111,7 +111,7 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal'
+      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal', showBin: false
     },
     footer: {
       pageNumberPosition: 'center',
@@ -176,7 +176,7 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic'
+      font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic', showBin: false
     },
     footer: {
       pageNumberPosition: 'outer',
@@ -185,6 +185,73 @@ const BRAND_PRESETS = {
       runningLabelPosition: 'header'
     },
     frontMatterPages: 2
+  },
+
+  // ─── DEFAULT ──────────────────────────────────────────────────────────────
+  // A ready-to-use fine-dining preset built entirely on Google Fonts.
+  // No local font or image files are required; fonts are fetched from
+  // fonts.googleapis.com when the generated HTML is opened in a browser.
+  DEFAULT: {
+    label: 'Default (Fine Dining)',
+    page: {
+      sizePreset:   'Custom',
+      width:        8,
+      height:       13,
+      marginTop:    0.65,
+      marginBottom: 0.65,
+      marginInner:  1.0,
+      marginOuter:  0.5,
+      pageBuffer:   80
+    },
+    colors: {
+      primary: '#5C2D3E',   // deep burgundy
+      text:    '#333333'
+    },
+    images: {
+      logo:   '',
+      footer: ''
+    },
+    welcome: {
+      showTitlePage: false,
+      showDate:      false,
+      line1: '',
+      line2: '',
+      line3: ''
+    },
+    // Loaded via <link> in the generated HTML — requires internet access.
+    googleFontsUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&display=swap',
+    headingStyles: {
+      1: {
+        // Main category (e.g., "SPARKLING WINE", "RED WINE") — large, centered, spaced caps
+        title:   { font: 'Cormorant Garamond', size: 24, color: '#5C2D3E', align: 'center', weight: '500', transform: 'uppercase', spacing: 4, underline: 'none', variant: 'normal', spaceBefore: 40, spaceAfter: 20 },
+        subtext: { font: 'EB Garamond', size: 13, color: '#888888', weight: '400', position: 'below' }
+      },
+      2: {
+        // Country / major grouping (e.g., "France", "Italy") — medium, centered, uppercase
+        title:   { font: 'Cormorant Garamond', size: 19, color: '#5C2D3E', align: 'center', weight: '400', transform: 'uppercase', spacing: 2, underline: 'none', variant: 'normal', spaceBefore: 24, spaceAfter: 10 },
+        subtext: { font: 'EB Garamond', size: 12, color: '#666666', weight: '400', position: 'below' }
+      },
+      3: {
+        // Region / wine-colour category (e.g., "Burgundy", "Bordeaux") — small-caps, left
+        title:   { font: 'Cormorant Garamond', size: 14, color: '#333333', align: 'left', weight: '600', transform: 'none', spacing: 0.5, underline: 'none', variant: 'small-caps', spaceBefore: 18, spaceAfter: 5 },
+        subtext: { font: 'EB Garamond', size: 11, color: '#666666', weight: '400', position: 'below' }
+      },
+      4: {
+        // Sub-region / appellation (e.g., "Côte de Nuits", "Pauillac") — italic, underline
+        title:   { font: 'EB Garamond', size: 11, color: '#333333', align: 'left', weight: '400', transform: 'none', spacing: 0, underline: 'text', variant: 'normal', spaceBefore: 10, spaceAfter: 3 },
+        subtext: { font: 'EB Garamond', size: 10, color: '#777777', weight: '400', position: 'inline' }
+      }
+    },
+    wineEntry: {
+      font: 'EB Garamond', size: 11, color: '#333333', weight: '400', style: 'normal', showBin: false
+    },
+    footer: {
+      pageNumberPosition: 'outer',
+      footerRule:         'single',
+      showRunningLabel:   true,
+      runningLabelPosition: 'header'
+    },
+    frontMatterPages: 0
   }
 
 };

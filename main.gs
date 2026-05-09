@@ -57,13 +57,18 @@ function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
     svg: 'image/svg+xml', webp: 'image/webp'
   };
-  var footerExt  = extensionOf(imageSettings.footer);
+  // footerSettings.footerImage is authoritative (supports explicit empty = None)
+  var footerFileName = (footerSettings.footerImage !== undefined)
+    ? footerSettings.footerImage
+    : imageSettings.footer;
+  var footerExt  = extensionOf(footerFileName);
   var footerMime = imageMimeMap[footerExt] || 'image/png';
   var logoMime   = imageMimeMap[extensionOf(imageSettings.logo)] || 'image/png';
 
-  // Load images from Drive
-  var footerImageUri = getFileAsDataUri(imageSettings.footer, footerMime);
-  var logoImageUri   = getFileAsDataUri(imageSettings.logo,   logoMime);
+  // Load images from Drive (empty filename = intentionally disabled)
+  var logoFileName   = imageSettings.logo || '';
+  var footerImageUri = footerFileName ? getFileAsDataUri(footerFileName, footerMime) : '';
+  var logoImageUri   = logoFileName   ? getFileAsDataUri(logoFileName,   logoMime)   : '';
 
   // Resize SVG footer icons for the Ruxton Bar — CSS cannot resize content:url() images;
   // only the SVG's own width/height attributes control rendered size in @page margin boxes.
@@ -78,14 +83,15 @@ function loadAssets(imageSettings, headingStyles, wineEntry, footerSettings) {
       ELEMENT_HEIGHTS.RUXTON_FOOTER_ICON_SIZE + 'px');
   }
 
-  // Load fonts from Drive
+  // Load fonts from Drive — skip web fonts (no '.' in name; loaded via Google Fonts link)
   var fontUris = new Map();
   var missing  = [];
 
-  if (!footerImageUri) missing.push('Footer image (' + imageSettings.footer + ')');
-  if (!logoImageUri)   missing.push('Logo image ('   + imageSettings.logo   + ')');
+  if (footerFileName && !footerImageUri) missing.push('Footer image (' + footerFileName + ')');
+  if (logoFileName   && !logoImageUri)   missing.push('Logo image ('   + logoFileName   + ')');
 
   fontFiles.forEach(function(fileName) {
+    if (fileName.indexOf('.') === -1) return; // web font — no Drive lookup needed
     var ext = extensionOf(fileName);
     var uri = getFileAsDataUri(fileName, getMimeForExtension(ext));
     if (uri) {
@@ -157,12 +163,13 @@ function generateWineList() {
 
   // Step 4: Build brand object from already-resolved settings — no new reads
   var brand = {
-    colors:        getColorSettings(allProps, preset),
-    welcome:       getWelcomeSettings(allProps, preset),
-    headingStyles: headingStyles,
-    wineEntry:     wineEntry,
-    footer:        footerSettings,
-    pageConfig:    pageConfig
+    colors:         getColorSettings(allProps, preset),
+    welcome:        getWelcomeSettings(allProps, preset),
+    headingStyles:  headingStyles,
+    wineEntry:      wineEntry,
+    footer:         footerSettings,
+    pageConfig:     pageConfig,
+    googleFontsUrl: preset.googleFontsUrl || null
   };
 
   // Step 5: Calculate pagination
