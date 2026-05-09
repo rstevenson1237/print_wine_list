@@ -140,11 +140,12 @@ function generateHTMLHead(assets, brand) {
 // --- Footer CSS ---
   var hasImage = !!(assets.footerImageUri && assets.footerImageUri.length > 0);
 
-  var numStyle =
+  var numStyleBase =
     'font-family: \'' + wineFont + '\', \'Georgia\', serif; ' +
     'font-size: 10px; ' +
-    'color: ' + col.primary + '; ' +
-    'vertical-align: top;';
+    'color: ' + col.primary + '; ';
+  var numStyle       = numStyleBase + 'vertical-align: top;';
+  var numStyleCenter = numStyleBase + 'vertical-align: middle;';
 
   var ruleBorder    = '';
   var topRuleBorder = '';
@@ -225,7 +226,7 @@ function generateHTMLHead(assets, brand) {
       '            @bottom-left  { content: ""; ' + ruleStyleFull + ' }\n' +
       '            @bottom-center {\n' +
       '                content: counter(page);\n' +
-      '                ' + numStyle + '\n' +
+      '                ' + numStyleCenter + '\n' +
       '                ' + imageBg + '\n' +
       '                background-origin: content-box;\n' +
       '                ' + ruleStyleFull + '\n' +
