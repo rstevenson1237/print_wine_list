@@ -368,7 +368,8 @@ function generateHTMLHead(assets, brand) {
     '            margin-bottom: 30px;\n',
     '        }\n',
     '        .toc-list { display: flex; gap: 40px; align-items: flex-start; }\n' +
-    '        .toc-col { flex: 1; }\n',
+    '        .toc-col { flex: 1; }\n' +
+    '        .toc-col > div:first-child { margin-top: 0; }\n',
     '        .toc-list a {\n',
     '            text-decoration: none;\n',
     '            color: ', col.text, ';\n',
