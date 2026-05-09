@@ -60,12 +60,16 @@ const PROP_KEYS = {
   WELCOME_LINE3:   'WELCOME_LINE3',
 
   // Wine Entry
-  WINE_FONT:   'WINE_ENTRY_FONT',
-  WINE_SIZE:   'WINE_ENTRY_SIZE',
-  WINE_COLOR:  'WINE_ENTRY_COLOR',
-  WINE_WEIGHT: 'WINE_ENTRY_WEIGHT',
-  WINE_STYLE:  'WINE_ENTRY_STYLE',
-  WINE_SHOW_BIN: 'WINE_ENTRY_SHOW_BIN',
+  WINE_FONT:       'WINE_ENTRY_FONT',
+  WINE_SIZE:       'WINE_ENTRY_SIZE',
+  WINE_COLOR:      'WINE_ENTRY_COLOR',
+  WINE_WEIGHT:     'WINE_ENTRY_WEIGHT',
+  WINE_STYLE:      'WINE_ENTRY_STYLE',
+  WINE_SPACING:    'WINE_ENTRY_SPACING',
+  WINE_TRANSFORM:  'WINE_ENTRY_TRANSFORM',
+  WINE_VARIANT:    'WINE_ENTRY_VARIANT',
+  WINE_SPACE_AFTER:'WINE_ENTRY_SPACE_AFTER',
+  WINE_SHOW_BIN:   'WINE_ENTRY_SHOW_BIN',
 
   // Footer
   FOOTER_PAGE_NUMBER_POSITION: 'FOOTER_PAGE_NUMBER_POSITION',
@@ -147,12 +151,16 @@ function loadBrandPreset(brandName) {
     props[PROP_KEYS.WELCOME_LINE3]   = preset.welcome.line3;
 
     // Wine Entry
-    props[PROP_KEYS.WINE_FONT]     = preset.wineEntry.font;
-    props[PROP_KEYS.WINE_SIZE]     = preset.wineEntry.size.toString();
-    props[PROP_KEYS.WINE_COLOR]    = preset.wineEntry.color;
-    props[PROP_KEYS.WINE_WEIGHT]   = preset.wineEntry.weight;
-    props[PROP_KEYS.WINE_STYLE]    = preset.wineEntry.style;
-    props[PROP_KEYS.WINE_SHOW_BIN] = (preset.wineEntry.showBin || false).toString();
+    props[PROP_KEYS.WINE_FONT]        = preset.wineEntry.font;
+    props[PROP_KEYS.WINE_SIZE]        = preset.wineEntry.size.toString();
+    props[PROP_KEYS.WINE_COLOR]       = preset.wineEntry.color;
+    props[PROP_KEYS.WINE_WEIGHT]      = preset.wineEntry.weight;
+    props[PROP_KEYS.WINE_STYLE]       = preset.wineEntry.style;
+    props[PROP_KEYS.WINE_SPACING]     = (preset.wineEntry.spacing   || 0).toString();
+    props[PROP_KEYS.WINE_TRANSFORM]   = preset.wineEntry.transform  || 'none';
+    props[PROP_KEYS.WINE_VARIANT]     = preset.wineEntry.variant    || 'normal';
+    props[PROP_KEYS.WINE_SPACE_AFTER] = (preset.wineEntry.spaceAfter || 0).toString();
+    props[PROP_KEYS.WINE_SHOW_BIN]    = (preset.wineEntry.showBin   || false).toString();
 
     // Footer
     props[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] = preset.footer.pageNumberPosition;
@@ -420,14 +428,19 @@ function getAllHeadingStyles(allProps, preset) {
 function getWineEntryStyle(allProps, preset) {
   var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
   var pr = preset   || getActiveBrandPreset(p);
-  var storedShowBin = p[PROP_KEYS.WINE_SHOW_BIN];
+  var storedShowBin   = p[PROP_KEYS.WINE_SHOW_BIN];
+  var storedSpaceAfter = p[PROP_KEYS.WINE_SPACE_AFTER];
   return {
-    font:    p[PROP_KEYS.WINE_FONT]           || pr.wineEntry.font,
-    size:    parseInt(p[PROP_KEYS.WINE_SIZE]) || pr.wineEntry.size,
-    color:   p[PROP_KEYS.WINE_COLOR]          || pr.wineEntry.color,
-    weight:  p[PROP_KEYS.WINE_WEIGHT]         || pr.wineEntry.weight,
-    style:   p[PROP_KEYS.WINE_STYLE]          || pr.wineEntry.style,
-    showBin: storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false)
+    font:       p[PROP_KEYS.WINE_FONT]              || pr.wineEntry.font,
+    size:       parseInt(p[PROP_KEYS.WINE_SIZE])    || pr.wineEntry.size,
+    color:      p[PROP_KEYS.WINE_COLOR]             || pr.wineEntry.color,
+    weight:     p[PROP_KEYS.WINE_WEIGHT]            || pr.wineEntry.weight,
+    style:      p[PROP_KEYS.WINE_STYLE]             || pr.wineEntry.style,
+    spacing:    parseFloat(p[PROP_KEYS.WINE_SPACING])  || pr.wineEntry.spacing  || 0,
+    transform:  p[PROP_KEYS.WINE_TRANSFORM]            || pr.wineEntry.transform || 'none',
+    variant:    p[PROP_KEYS.WINE_VARIANT]              || pr.wineEntry.variant   || 'normal',
+    spaceAfter: storedSpaceAfter != null ? (parseFloat(storedSpaceAfter) || 0) : (pr.wineEntry.spaceAfter || 0),
+    showBin:    storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false)
   };
 }
 
@@ -540,12 +553,16 @@ function saveHeadingStyle(type, styleObj) {
 function saveWineEntryStyle(styleObj) {
   try {
     var props = {};
-    if (styleObj.font)                   props[PROP_KEYS.WINE_FONT]     = styleObj.font;
-    if (styleObj.size)                   props[PROP_KEYS.WINE_SIZE]     = styleObj.size.toString();
-    if (styleObj.color)                  props[PROP_KEYS.WINE_COLOR]    = styleObj.color;
-    if (styleObj.weight)                 props[PROP_KEYS.WINE_WEIGHT]   = styleObj.weight;
-    if (styleObj.style)                  props[PROP_KEYS.WINE_STYLE]    = styleObj.style;
-    if (styleObj.showBin !== undefined)  props[PROP_KEYS.WINE_SHOW_BIN] = styleObj.showBin.toString();
+    if (styleObj.font)                     props[PROP_KEYS.WINE_FONT]        = styleObj.font;
+    if (styleObj.size)                     props[PROP_KEYS.WINE_SIZE]        = styleObj.size.toString();
+    if (styleObj.color)                    props[PROP_KEYS.WINE_COLOR]       = styleObj.color;
+    if (styleObj.weight)                   props[PROP_KEYS.WINE_WEIGHT]      = styleObj.weight;
+    if (styleObj.style)                    props[PROP_KEYS.WINE_STYLE]       = styleObj.style;
+    if (styleObj.spacing    !== undefined) props[PROP_KEYS.WINE_SPACING]     = styleObj.spacing.toString();
+    if (styleObj.transform  !== undefined) props[PROP_KEYS.WINE_TRANSFORM]   = styleObj.transform;
+    if (styleObj.variant    !== undefined) props[PROP_KEYS.WINE_VARIANT]     = styleObj.variant;
+    if (styleObj.spaceAfter !== undefined) props[PROP_KEYS.WINE_SPACE_AFTER] = styleObj.spaceAfter.toString();
+    if (styleObj.showBin    !== undefined) props[PROP_KEYS.WINE_SHOW_BIN]    = styleObj.showBin.toString();
     PropertiesService.getDocumentProperties().setProperties(props);
     return { success: true, message: 'Wine entry style saved.' };
   } catch (e) {

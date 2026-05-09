@@ -111,7 +111,8 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal', showBin: false
+      font: 'ApexNew-Book.otf', size: 10, color: '#333333', weight: 'normal', style: 'normal',
+      spacing: 0, transform: 'none', variant: 'normal', spaceAfter: 0, showBin: false
     },
     footer: {
       pageNumberPosition: 'center',
@@ -176,7 +177,8 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic', showBin: false
+      font: 'Ruxton-Body.otf', size: 12, color: '#222222', weight: 'normal', style: 'italic',
+      spacing: 0, transform: 'none', variant: 'normal', spaceAfter: 0, showBin: false
     },
     footer: {
       pageNumberPosition: 'outer',
@@ -243,7 +245,8 @@ const BRAND_PRESETS = {
       }
     },
     wineEntry: {
-      font: 'EB Garamond', size: 11, color: '#333333', weight: '400', style: 'normal', showBin: false
+      font: 'EB Garamond', size: 11, color: '#333333', weight: '400', style: 'normal',
+      spacing: 0, transform: 'none', variant: 'normal', spaceAfter: 0, showBin: false
     },
     footer: {
       pageNumberPosition: 'outer',
@@ -330,7 +333,7 @@ const ELEMENT_HEIGHTS = {
 function getWineEntryHeight(wineEntry) {
   var m = ELEMENT_HEIGHTS.WINE_ENTRY_MARGIN;
   var p = ELEMENT_HEIGHTS.WINE_ENTRY_PADDING;
-  return (m + p) * 2 + (wineEntry.size * ELEMENT_HEIGHTS.LINE_HEIGHT);
+  return (m + p) * 2 + (wineEntry.size * ELEMENT_HEIGHTS.LINE_HEIGHT) + (wineEntry.spaceAfter || 0);
 }
 
 // ============================================================================
