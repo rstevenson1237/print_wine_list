@@ -416,47 +416,49 @@
   var subtextPosOpts = ['below', 'inline'];
 
   // ============================================================================
-  // Initialisation — two parallel server calls
+  // Initialisation — two parallel server calls, two-phase rendering
+  //
+  // Phase 1 (getAllSettings): populate all form controls and hide the loading
+  //   overlay as soon as settings data arrives. This is fast — one batch
+  //   DocumentProperties read plus a Drive folder name scan.
+  //
+  // Phase 2 (getAssetPreviewData): inject @font-face rules and live previews
+  //   once asset blobs are ready. This is slower (N Drive file reads) but
+  //   the dialog is already usable before it completes.
   // ============================================================================
 
-  var _initData  = {};
-  var _initCount = 0;
+  var _initData = {};
 
-  function _checkInit() {
-    _initCount++;
-    if (_initCount >= 2) _finalizeInit();
-  }
-
-  // Fire both calls immediately — they execute concurrently from the client's perspective
+  // Phase 1 — settings controls
   google.script.run
-    .withSuccessHandler(function(s) { _initData.settings = s; _checkInit(); })
+    .withSuccessHandler(function(s) {
+      _initData.settings = s;
+      _applySettings(s);
+      if (_initData.assets) _applyAssets(_initData.assets);
+    })
     .withFailureHandler(function(e) { showStatus('error', 'Failed to load settings: ' + e.message); })
     .getAllSettings();
 
+  // Phase 2 — asset previews (may arrive before or after settings)
   google.script.run
-    .withSuccessHandler(function(a) { _initData.assets = a || { fonts: {}, images: {} }; _checkInit(); })
-    .withFailureHandler(function()  { _initData.assets = { fonts: {}, images: {} };      _checkInit(); })
+    .withSuccessHandler(function(a) {
+      _initData.assets = a || { fonts: {}, images: {} };
+      if (_initData.settings) _applyAssets(_initData.assets);
+    })
+    .withFailureHandler(function() {
+      _initData.assets = { fonts: {}, images: {} };
+    })
     .getAssetPreviewData();
 
-  function _finalizeInit() {
-    var settings = _initData.settings;
-    var assets   = _initData.assets;
-
+  /** Populates all form controls and hides the loading overlay. */
+  function _applySettings(settings) {
     fontPool  = settings.fontPool  || [];
     imagePool = settings.imagePool || [];
-    assetUris = assets;
 
-    // Inject @font-face rules so previews render correctly
-    injectFontFaces(assets.fonts || {});
-
-    // Inject Google Fonts link for web-font presets (e.g., DEFAULT)
     injectGoogleFontsLink(settings.googleFontsUrl);
+    populateSelect('brand-select',    settings.brandPresets || [], settings.brandName);
+    populateSelect('page-size-preset', settings.pageSizes   || [], settings.pageSettings.sizePreset);
 
-    // Populate brand & page-size dropdowns
-    populateSelect('brand-select', settings.brandPresets || [], settings.brandName);
-    populateSelect('page-size-preset', settings.pageSizes || [], settings.pageSettings.sizePreset);
-
-    // Render all sections
     renderPageSettings(settings.pageSettings);
     renderHeadingPanels(settings.headingStyles);
     renderWineEntry(settings.wineEntry);
@@ -467,11 +469,20 @@
     renderFontPool();
     renderImagePool();
 
-    // Kick off all live previews
-    updateAllPreviews();
-
-    // Remove loading overlay
     document.getElementById('loading-overlay').style.display = 'none';
+  }
+
+  /** Injects font faces and refreshes all live previews once asset blobs are loaded. */
+  function _applyAssets(assets) {
+    assetUris = assets;
+    injectFontFaces(assets.fonts || {});
+    updateAllPreviews();
+    // Refresh image thumbnails and pool lists now that URIs are available
+    previewImage('logo');
+    previewImage('footer');
+    previewFooterImage();
+    renderFontPool();
+    renderImagePool();
   }
 
   // ============================================================================
@@ -528,12 +539,12 @@
     var el = document.getElementById('preview-t' + type);
     if (!el) return;
     var pre     = 'hs-' + type + '-title-';
-    var font    = valSafe(pre + 'font');
-    var size    = valSafe(pre + 'size');
-    var color   = valSafe(pre + 'color') || valSafe(pre + 'color-pick');
-    var weight  = valSafe(pre + 'weight');
-    var xform   = valSafe(pre + 'transform');
-    var variant = valSafe(pre + 'variant') || 'normal';
+    var font    = val(pre + 'font');
+    var size    = val(pre + 'size');
+    var color   = val(pre + 'color') || val(pre + 'color-pick');
+    var weight  = val(pre + 'weight');
+    var xform   = val(pre + 'transform');
+    var variant = val(pre + 'variant') || 'normal';
     if (!font) return;
     var family = font.replace(/\.[^.]+$/, '');
     el.style.fontFamily    = '"' + family + '"';
@@ -548,11 +559,11 @@
   function updateWinePreview() {
     var el = document.getElementById('wine-preview');
     if (!el) return;
-    var font   = valSafe('wine-font');
-    var size   = valSafe('wine-size');
-    var color  = valSafe('wine-color-hex') || valSafe('wine-color-pick');
-    var weight = valSafe('wine-weight');
-    var style  = valSafe('wine-style');
+    var font   = val('wine-font');
+    var size   = val('wine-size');
+    var color  = val('wine-color-hex') || val('wine-color-pick');
+    var weight = val('wine-weight');
+    var style  = val('wine-style');
     if (!font) return;
     var family = font.replace(/\.[^.]+$/, '');
     el.style.fontFamily = '"' + family + '"';
@@ -873,7 +884,7 @@
 
   function previewImage(slot) {
     var wrap     = document.getElementById('img-' + slot + '-thumb-wrap');
-    var fileName = valSafe('img-' + slot + '-select');
+    var fileName = val('img-' + slot + '-select');
     var uri      = fileName && assetUris.images && assetUris.images[fileName];
 
     wrap.innerHTML = '';
@@ -891,7 +902,7 @@
   }
 
   function saveImageAssignmentUI(slot) {
-    var fileName = valSafe('img-' + slot + '-select');
+    var fileName = val('img-' + slot + '-select');
     if (!fileName) { showStatus('error', 'No image selected.'); return; }
     google.script.run
       .withSuccessHandler(function(r) { showStatus(r.success ? 'success' : 'error', r.message); })
@@ -957,7 +968,7 @@
   }
 
   function previewFooterImage() {
-    updateFooterImageThumb(valSafe('footer-image-select'));
+    updateFooterImageThumb(val('footer-image-select'));
   }
 
   function renderFooter(f) {
@@ -977,7 +988,7 @@
         footerRule:           val('footer-rule'),
         showRunningLabel:     document.getElementById('show-running-label').checked,
         runningLabelPosition: val('running-label-position'),
-        footerImage:          valSafe('footer-image-select') || ''
+        footerImage:          val('footer-image-select') || ''
       });
   }
 
@@ -1186,12 +1197,6 @@
   // ============================================================================
 
   function val(id) {
-    var el = document.getElementById(id);
-    return el ? el.value : '';
-  }
-
-  /** Like val() but returns empty string rather than throwing if element missing. */
-  function valSafe(id) {
     var el = document.getElementById(id);
     return el ? el.value : '';
   }
