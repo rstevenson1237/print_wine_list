@@ -95,9 +95,8 @@ function getSectionData(sheet) {
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return [];   // header row only
 
-  // Read only the 5 columns this function actually parses (A–E),
-  // up to the last row with data — avoids loading empty trailing rows.
-  var data = sheet.getRange(1, 1, lastRow, 5).getValues();
+  // Read columns A–F (6 columns): A–E are section fields, F is the "86" skip flag.
+  var data = sheet.getRange(1, 1, lastRow, 6).getValues();
 
   var sections = [];
 
@@ -126,6 +125,15 @@ function getSectionData(sheet) {
     } else if (forceRaw !== null && forceRaw !== undefined && forceRaw !== '') {
       var str = forceRaw.toString().trim().toLowerCase();
       forceNewPage = (str === 'true' || str === '1' || str === 'yes' || str === 'x');
+    }
+
+    // Column F: "86" skip flag — exclude this section entirely from generation
+    var skipRaw = row[5];
+    if (typeof skipRaw === 'boolean') {
+      if (skipRaw) continue;
+    } else if (skipRaw !== null && skipRaw !== undefined && skipRaw !== '') {
+      var sk = skipRaw.toString().trim().toLowerCase();
+      if (sk === 'true' || sk === '1' || sk === 'yes' || sk === 'x') continue;
     }
 
     sections.push({
