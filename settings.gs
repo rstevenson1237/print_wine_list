@@ -60,12 +60,16 @@ const PROP_KEYS = {
   WELCOME_LINE3:   'WELCOME_LINE3',
 
   // Wine Entry
-  WINE_FONT:   'WINE_ENTRY_FONT',
-  WINE_SIZE:   'WINE_ENTRY_SIZE',
-  WINE_COLOR:  'WINE_ENTRY_COLOR',
-  WINE_WEIGHT: 'WINE_ENTRY_WEIGHT',
-  WINE_STYLE:  'WINE_ENTRY_STYLE',
-  WINE_SHOW_BIN: 'WINE_ENTRY_SHOW_BIN',
+  WINE_FONT:       'WINE_ENTRY_FONT',
+  WINE_SIZE:       'WINE_ENTRY_SIZE',
+  WINE_COLOR:      'WINE_ENTRY_COLOR',
+  WINE_WEIGHT:     'WINE_ENTRY_WEIGHT',
+  WINE_STYLE:      'WINE_ENTRY_STYLE',
+  WINE_SPACING:    'WINE_ENTRY_SPACING',
+  WINE_TRANSFORM:  'WINE_ENTRY_TRANSFORM',
+  WINE_VARIANT:    'WINE_ENTRY_VARIANT',
+  WINE_SPACE_AFTER:'WINE_ENTRY_SPACE_AFTER',
+  WINE_SHOW_BIN:   'WINE_ENTRY_SHOW_BIN',
 
   // Footer
   FOOTER_PAGE_NUMBER_POSITION: 'FOOTER_PAGE_NUMBER_POSITION',
@@ -147,12 +151,16 @@ function loadBrandPreset(brandName) {
     props[PROP_KEYS.WELCOME_LINE3]   = preset.welcome.line3;
 
     // Wine Entry
-    props[PROP_KEYS.WINE_FONT]     = preset.wineEntry.font;
-    props[PROP_KEYS.WINE_SIZE]     = preset.wineEntry.size.toString();
-    props[PROP_KEYS.WINE_COLOR]    = preset.wineEntry.color;
-    props[PROP_KEYS.WINE_WEIGHT]   = preset.wineEntry.weight;
-    props[PROP_KEYS.WINE_STYLE]    = preset.wineEntry.style;
-    props[PROP_KEYS.WINE_SHOW_BIN] = (preset.wineEntry.showBin || false).toString();
+    props[PROP_KEYS.WINE_FONT]        = preset.wineEntry.font;
+    props[PROP_KEYS.WINE_SIZE]        = preset.wineEntry.size.toString();
+    props[PROP_KEYS.WINE_COLOR]       = preset.wineEntry.color;
+    props[PROP_KEYS.WINE_WEIGHT]      = preset.wineEntry.weight;
+    props[PROP_KEYS.WINE_STYLE]       = preset.wineEntry.style;
+    props[PROP_KEYS.WINE_SPACING]     = (preset.wineEntry.spacing   || 0).toString();
+    props[PROP_KEYS.WINE_TRANSFORM]   = preset.wineEntry.transform  || 'none';
+    props[PROP_KEYS.WINE_VARIANT]     = preset.wineEntry.variant    || 'normal';
+    props[PROP_KEYS.WINE_SPACE_AFTER] = (preset.wineEntry.spaceAfter || 0).toString();
+    props[PROP_KEYS.WINE_SHOW_BIN]    = (preset.wineEntry.showBin   || false).toString();
 
     // Footer
     props[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] = preset.footer.pageNumberPosition;
@@ -251,13 +259,17 @@ function getAvailableImages() {
 /**
  * Loads every font and image in the Drive folder as a base64 data URI.
  * Called once on Settings dialog open to enable live previews without
- * further server round trips. Fonts and images are treated identically here.
+ * further server round trips.
+ *
+ * Scans the Drive folder once and reads each file blob directly from the
+ * iterator, avoiding the per-file folder re-traversal that getFileAsDataUri()
+ * would otherwise perform.
  *
  * @returns {{ fonts: Object.<string,{uri:string,format:string}>, images: Object.<string,string> }}
  */
 function getAssetPreviewData() {
-  var assets = scanDriveFolder_();
-
+  var fontExts  = ['otf', 'ttf', 'woff', 'woff2'];
+  var imageExts = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
   var imageMimeMap = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
     svg: 'image/svg+xml', webp: 'image/webp'
@@ -266,18 +278,30 @@ function getAssetPreviewData() {
   var fonts  = {};
   var images = {};
 
-  assets.fonts.forEach(function(fileName) {
-    var ext = extensionOf(fileName);
-    var uri = getFileAsDataUri(fileName, getMimeForExtension(ext));
-    if (uri) fonts[fileName] = { uri: uri, format: getFontFormatForExtension(ext) };
-  });
-
-  assets.images.forEach(function(fileName) {
-    var ext  = extensionOf(fileName);
-    var mime = imageMimeMap[ext] || 'image/png';
-    var uri  = getFileAsDataUri(fileName, mime);
-    if (uri) images[fileName] = uri;
-  });
+  try {
+    var ssFile = DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId());
+    var parents = ssFile.getParents();
+    if (!parents.hasNext()) return { fonts: fonts, images: images };
+    var folder = parents.next();
+    var files  = folder.getFiles();
+    while (files.hasNext()) {
+      var file = files.next();
+      var name = file.getName();
+      var ext  = name.split('.').pop().toLowerCase();
+      var blob, base64;
+      if (fontExts.indexOf(ext) > -1) {
+        blob   = file.getBlob();
+        base64 = Utilities.base64Encode(blob.getBytes());
+        fonts[name] = { uri: 'data:' + getMimeForExtension(ext) + ';base64,' + base64, format: getFontFormatForExtension(ext) };
+      } else if (imageExts.indexOf(ext) > -1) {
+        blob   = file.getBlob();
+        base64 = Utilities.base64Encode(blob.getBytes());
+        images[name] = 'data:' + (imageMimeMap[ext] || 'image/png') + ';base64,' + base64;
+      }
+    }
+  } catch (e) {
+    Logger.log('getAssetPreviewData: ' + e.toString());
+  }
 
   return { fonts: fonts, images: images };
 }
@@ -404,14 +428,19 @@ function getAllHeadingStyles(allProps, preset) {
 function getWineEntryStyle(allProps, preset) {
   var p  = allProps || PropertiesService.getDocumentProperties().getProperties();
   var pr = preset   || getActiveBrandPreset(p);
-  var storedShowBin = p[PROP_KEYS.WINE_SHOW_BIN];
+  var storedShowBin   = p[PROP_KEYS.WINE_SHOW_BIN];
+  var storedSpaceAfter = p[PROP_KEYS.WINE_SPACE_AFTER];
   return {
-    font:    p[PROP_KEYS.WINE_FONT]           || pr.wineEntry.font,
-    size:    parseInt(p[PROP_KEYS.WINE_SIZE]) || pr.wineEntry.size,
-    color:   p[PROP_KEYS.WINE_COLOR]          || pr.wineEntry.color,
-    weight:  p[PROP_KEYS.WINE_WEIGHT]         || pr.wineEntry.weight,
-    style:   p[PROP_KEYS.WINE_STYLE]          || pr.wineEntry.style,
-    showBin: storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false)
+    font:       p[PROP_KEYS.WINE_FONT]              || pr.wineEntry.font,
+    size:       parseInt(p[PROP_KEYS.WINE_SIZE])    || pr.wineEntry.size,
+    color:      p[PROP_KEYS.WINE_COLOR]             || pr.wineEntry.color,
+    weight:     p[PROP_KEYS.WINE_WEIGHT]            || pr.wineEntry.weight,
+    style:      p[PROP_KEYS.WINE_STYLE]             || pr.wineEntry.style,
+    spacing:    parseFloat(p[PROP_KEYS.WINE_SPACING])  || pr.wineEntry.spacing  || 0,
+    transform:  p[PROP_KEYS.WINE_TRANSFORM]            || pr.wineEntry.transform || 'none',
+    variant:    p[PROP_KEYS.WINE_VARIANT]              || pr.wineEntry.variant   || 'normal',
+    spaceAfter: storedSpaceAfter != null ? (parseFloat(storedSpaceAfter) || 0) : (pr.wineEntry.spaceAfter || 0),
+    showBin:    storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false)
   };
 }
 
@@ -523,13 +552,18 @@ function saveHeadingStyle(type, styleObj) {
 
 function saveWineEntryStyle(styleObj) {
   try {
-    var p = PropertiesService.getDocumentProperties();
-    if (styleObj.font)              p.setProperty(PROP_KEYS.WINE_FONT,     styleObj.font);
-    if (styleObj.size)              p.setProperty(PROP_KEYS.WINE_SIZE,     styleObj.size.toString());
-    if (styleObj.color)             p.setProperty(PROP_KEYS.WINE_COLOR,    styleObj.color);
-    if (styleObj.weight)            p.setProperty(PROP_KEYS.WINE_WEIGHT,   styleObj.weight);
-    if (styleObj.style)             p.setProperty(PROP_KEYS.WINE_STYLE,    styleObj.style);
-    if (styleObj.showBin !== undefined) p.setProperty(PROP_KEYS.WINE_SHOW_BIN, styleObj.showBin.toString());
+    var props = {};
+    if (styleObj.font)                     props[PROP_KEYS.WINE_FONT]        = styleObj.font;
+    if (styleObj.size)                     props[PROP_KEYS.WINE_SIZE]        = styleObj.size.toString();
+    if (styleObj.color)                    props[PROP_KEYS.WINE_COLOR]       = styleObj.color;
+    if (styleObj.weight)                   props[PROP_KEYS.WINE_WEIGHT]      = styleObj.weight;
+    if (styleObj.style)                    props[PROP_KEYS.WINE_STYLE]       = styleObj.style;
+    if (styleObj.spacing    !== undefined) props[PROP_KEYS.WINE_SPACING]     = styleObj.spacing.toString();
+    if (styleObj.transform  !== undefined) props[PROP_KEYS.WINE_TRANSFORM]   = styleObj.transform;
+    if (styleObj.variant    !== undefined) props[PROP_KEYS.WINE_VARIANT]     = styleObj.variant;
+    if (styleObj.spaceAfter !== undefined) props[PROP_KEYS.WINE_SPACE_AFTER] = styleObj.spaceAfter.toString();
+    if (styleObj.showBin    !== undefined) props[PROP_KEYS.WINE_SHOW_BIN]    = styleObj.showBin.toString();
+    PropertiesService.getDocumentProperties().setProperties(props);
     return { success: true, message: 'Wine entry style saved.' };
   } catch (e) {
     return { success: false, message: e.toString() };
@@ -568,14 +602,13 @@ function savePageSettings(pageObj) {
  */
 function saveFooterSettings(footerObj) {
   try {
-    var p = PropertiesService.getDocumentProperties();
-    if (footerObj.pageNumberPosition !== undefined) p.setProperty(PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION, footerObj.pageNumberPosition);
-    if (footerObj.footerRule         !== undefined) p.setProperty(PROP_KEYS.FOOTER_RULE,                 footerObj.footerRule);
-    if (footerObj.showRunningLabel   !== undefined) p.setProperty(PROP_KEYS.SHOW_RUNNING_LABEL,          footerObj.showRunningLabel.toString());
-    if (footerObj.runningLabelPosition !== undefined) p.setProperty(PROP_KEYS.RUNNING_LABEL_POSITION,    footerObj.runningLabelPosition);
-    if (footerObj.footerImage !== undefined) {
-      p.setProperty(PROP_KEYS.IMAGE_FOOTER, footerObj.footerImage || '');
-    }
+    var props = {};
+    if (footerObj.pageNumberPosition   !== undefined) props[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] = footerObj.pageNumberPosition;
+    if (footerObj.footerRule           !== undefined) props[PROP_KEYS.FOOTER_RULE]                 = footerObj.footerRule;
+    if (footerObj.showRunningLabel     !== undefined) props[PROP_KEYS.SHOW_RUNNING_LABEL]          = footerObj.showRunningLabel.toString();
+    if (footerObj.runningLabelPosition !== undefined) props[PROP_KEYS.RUNNING_LABEL_POSITION]      = footerObj.runningLabelPosition;
+    if (footerObj.footerImage          !== undefined) props[PROP_KEYS.IMAGE_FOOTER]                = footerObj.footerImage || '';
+    PropertiesService.getDocumentProperties().setProperties(props);
     return { success: true, message: 'Footer settings saved.' };
   } catch (e) {
     return { success: false, message: e.toString() };
@@ -597,17 +630,19 @@ function saveColor(slot, value) {
 }
 
 function saveWelcomeText(line1, line2, line3) {
-  var p = PropertiesService.getDocumentProperties();
-  p.setProperty(PROP_KEYS.WELCOME_LINE1, line1 || '');
-  p.setProperty(PROP_KEYS.WELCOME_LINE2, line2 || '');
-  p.setProperty(PROP_KEYS.WELCOME_LINE3, line3 || '');
+  var props = {};
+  props[PROP_KEYS.WELCOME_LINE1] = line1 || '';
+  props[PROP_KEYS.WELCOME_LINE2] = line2 || '';
+  props[PROP_KEYS.WELCOME_LINE3] = line3 || '';
+  PropertiesService.getDocumentProperties().setProperties(props);
   return { success: true, message: 'Welcome text saved.' };
 }
 
 function saveWelcomeToggles(showTitlePage, showDate) {
-  var p = PropertiesService.getDocumentProperties();
-  p.setProperty(PROP_KEYS.SHOW_TITLE_PAGE, showTitlePage.toString());
-  p.setProperty(PROP_KEYS.SHOW_DATE,       showDate.toString());
+  var props = {};
+  props[PROP_KEYS.SHOW_TITLE_PAGE] = showTitlePage.toString();
+  props[PROP_KEYS.SHOW_DATE]       = showDate.toString();
+  PropertiesService.getDocumentProperties().setProperties(props);
   return { success: true, message: 'Title page settings saved.' };
 }
 

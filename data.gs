@@ -86,15 +86,17 @@ function prepareWineListData() {
  * @returns {Array<Object>} Ordered section descriptors:
  *   { code, type, title, subtext, forceNewPage }
  */
-function getSectionData() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.SECTIONS);
+function getSectionData(sheet) {
   if (!sheet) {
     SpreadsheetApp.getUi().alert('Error: Sheet "' + SHEETS.SECTIONS + '" not found.');
-    return null;
+    return [];
   }
 
-  var data = sheet.getDataRange().getValues();
-  if (data.length < 2) return [];   // header row only
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];   // header row only
+
+  // Read columns A–F (6 columns): A–E are section fields, F is the "86" skip flag.
+  var data = sheet.getRange(1, 1, lastRow, 6).getValues();
 
   var sections = [];
 
@@ -123,6 +125,15 @@ function getSectionData() {
     } else if (forceRaw !== null && forceRaw !== undefined && forceRaw !== '') {
       var str = forceRaw.toString().trim().toLowerCase();
       forceNewPage = (str === 'true' || str === '1' || str === 'yes' || str === 'x');
+    }
+
+    // Column F: "86" skip flag — exclude this section entirely from generation
+    var skipRaw = row[5];
+    if (typeof skipRaw === 'boolean') {
+      if (skipRaw) continue;
+    } else if (skipRaw !== null && skipRaw !== undefined && skipRaw !== '') {
+      var sk = skipRaw.toString().trim().toLowerCase();
+      if (sk === 'true' || sk === '1' || sk === 'yes' || sk === 'x') continue;
     }
 
     sections.push({
@@ -174,7 +185,7 @@ function resolveType_(raw) {
  */
 function getWineData(sheet) {
   var lastRow = sheet.getLastRow();
-  var lastCol = sheet.getLastCol ? sheet.getLastColumn() : sheet.getLastColumn();
+  var lastCol = sheet.getLastColumn();
   if (lastRow < 2 || lastCol < 3) return [];
 
   var allData = sheet.getRange(1, 1, lastRow, lastCol).getValues();
