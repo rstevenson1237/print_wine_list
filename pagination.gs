@@ -62,6 +62,18 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
     var fitsOnEmptyPage   = totalHeight <= usableHeight;
 
     if (fitsOnCurrentPage) {
+      // Orphan protection: don't place a header-only section alone at the bottom of a
+      // page if its following content won't fit on the same page.
+      if (wines.length === 0 && currentHeight > runningLabelHeight) {
+        var followMinH = peekMinFollowingHeight_(
+          s + 1, sections, wineMap, headingStyles, headingHeightCache, wineEntryHeight
+        );
+        if (followMinH > 0 && (usableHeight - currentHeight - headingHeight) < followMinH) {
+          pageBreaks.add(s);
+          currentPage++;
+          currentHeight = runningLabelHeight;
+        }
+      }
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
 
@@ -182,6 +194,31 @@ function estimateHeadingHeight(typeLevel, subtext, headingStyles, cache) {
 function recordTOCEntry_(section, displayPage, tocMap, sectionIndex) {
   var key = sectionIndex + ':' + section.type + ':' + section.title;
   tocMap.set(key, displayPage);
+}
+
+/**
+ * Looks ahead from startIdx to find the minimum height needed by the next
+ * block of content. Chains through consecutive header-only sections until it
+ * reaches either a section with wines (adds MIN_WINES_PER_SPLIT worth of wine
+ * height), a forced-new-page/Type-1 section (stops — that section starts its
+ * own page), or the end of the array.
+ * Used by the orphan-prevention check in calculatePagination().
+ * @private
+ */
+function peekMinFollowingHeight_(startIdx, sections, wineMap, headingStyles, cache, wineEntryHeight) {
+  var total = 0;
+  for (var i = startIdx; i < sections.length; i++) {
+    var sec = sections[i];
+    if (sec.type === 1 || sec.forceNewPage) break;
+    var hh    = estimateHeadingHeight(sec.type, sec.subtext, headingStyles, cache);
+    var wines = (sec.code > 0 && wineMap.has(sec.code)) ? wineMap.get(sec.code) : [];
+    total += hh;
+    if (wines.length > 0) {
+      total += Math.min(wines.length, ELEMENT_HEIGHTS.MIN_WINES_PER_SPLIT) * wineEntryHeight;
+      break;
+    }
+  }
+  return total;
 }
 
 function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight, runningLabelHeight) {
