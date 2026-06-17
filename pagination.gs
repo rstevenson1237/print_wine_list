@@ -81,7 +81,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
       currentHeight += totalHeight;
       if (wines.length > 0) currentPageHasWines = true;
 
-    } else if (currentHeight > 0 && fitsOnEmptyPage) {
+    } else if (currentPageHasWines && fitsOnEmptyPage) {
       pageBreaks.add(s);
       currentPage++;
       currentHeight = runningLabelHeight;
