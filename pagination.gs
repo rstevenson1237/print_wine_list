@@ -32,6 +32,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
 
   var currentHeight = 0;
   var currentPage   = 1;
+  var currentPageHasWines = false;
 
   var pageBreaks     = new Set();
   var winePageBreaks = new Map();
@@ -55,6 +56,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
       pageBreaks.add(s);
       currentPage++;
       currentHeight = runningLabelHeight;
+      currentPageHasWines = false;
     }
 
     // Rule 2: Does the section fit?
@@ -62,21 +64,44 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
     var fitsOnEmptyPage   = totalHeight <= usableHeight;
 
     if (fitsOnCurrentPage) {
+      // Orphan protection: don't place a header-only section alone at the bottom of a
+      // page if its following content won't fit on the same page.
+      if (wines.length === 0 && currentHeight > runningLabelHeight) {
+        var followMinH = peekMinFollowingHeight_(
+          s + 1, sections, wineMap, headingStyles, headingHeightCache, wineEntryHeight
+        );
+        if (followMinH > 0 && (usableHeight - currentHeight - headingHeight) < followMinH) {
+          pageBreaks.add(s);
+          currentPage++;
+          currentHeight = runningLabelHeight;
+          currentPageHasWines = false;
+        }
+      }
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
+      if (wines.length > 0) currentPageHasWines = true;
 
     } else if (currentHeight > 0 && fitsOnEmptyPage) {
       pageBreaks.add(s);
       currentPage++;
       currentHeight = runningLabelHeight;
+      currentPageHasWines = false;
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
+      if (wines.length > 0) currentPageHasWines = true;
 
     } else {
-      if (currentHeight > 0) {
+      // Section doesn't fit on the current page and doesn't fit on an empty page.
+      // Only break to a new page if wine entries have already been placed here.
+      // If the current page is headers-only, keep the headers and start splitting
+      // wines right from the current position (accounting for the space they occupy).
+      var heightBeforeSplit = currentHeight;
+      if (currentPageHasWines) {
         pageBreaks.add(s);
         currentPage++;
         currentHeight = runningLabelHeight;
+        currentPageHasWines = false;
+        heightBeforeSplit = runningLabelHeight;
       }
 
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
@@ -85,11 +110,12 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
         currentHeight += headingHeight;
       } else {
         var splitResult = splitOversizedSection_(
-          headingHeight, wines.length, usableHeight, currentPage, wineEntryHeight, runningLabelHeight
+          headingHeight, wines.length, usableHeight, currentPage, wineEntryHeight, runningLabelHeight, heightBeforeSplit
         );
         winePageBreaks.set(s, splitResult.breaks);
         currentPage   = splitResult.endPage;
         currentHeight = splitResult.endHeight;
+        currentPageHasWines = true;
       }
     }
   }
@@ -184,10 +210,37 @@ function recordTOCEntry_(section, displayPage, tocMap, sectionIndex) {
   tocMap.set(key, displayPage);
 }
 
-function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight, runningLabelHeight) {
+/**
+ * Looks ahead from startIdx to find the minimum height needed by the next
+ * block of content. Chains through consecutive header-only sections until it
+ * reaches either a section with wines (adds MIN_WINES_PER_SPLIT worth of wine
+ * height), a forced-new-page/Type-1 section (stops — that section starts its
+ * own page), or the end of the array.
+ * Used by the orphan-prevention check in calculatePagination().
+ * @private
+ */
+function peekMinFollowingHeight_(startIdx, sections, wineMap, headingStyles, cache, wineEntryHeight) {
+  var total = 0;
+  for (var i = startIdx; i < sections.length; i++) {
+    var sec = sections[i];
+    if (sec.type === 1 || sec.forceNewPage) break;
+    var hh    = estimateHeadingHeight(sec.type, sec.subtext, headingStyles, cache);
+    var wines = (sec.code > 0 && wineMap.has(sec.code)) ? wineMap.get(sec.code) : [];
+    total += hh;
+    if (wines.length > 0) {
+      total += Math.min(wines.length, ELEMENT_HEIGHTS.MIN_WINES_PER_SPLIT) * wineEntryHeight;
+      break;
+    }
+  }
+  return total;
+}
+
+function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight, runningLabelHeight, existingPageHeight) {
   var breaks = new Set();
   var currentPage = startPage;
-  var currentHeight = headingHeight;
+  // existingPageHeight is the height already consumed on startPage (e.g. headers placed before
+  // this oversized section). When breaking fresh, this equals runningLabelHeight.
+  var currentHeight = (existingPageHeight !== undefined ? existingPageHeight : 0) + headingHeight;
   var winesOnCurrentPage = 0;
   var minWines = ELEMENT_HEIGHTS.MIN_WINES_PER_SPLIT;
   var labelHeight = runningLabelHeight || 0;

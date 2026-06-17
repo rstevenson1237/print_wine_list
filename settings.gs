@@ -75,7 +75,10 @@ const PROP_KEYS = {
   FOOTER_PAGE_NUMBER_POSITION: 'FOOTER_PAGE_NUMBER_POSITION',
   FOOTER_RULE:                 'FOOTER_RULE',
   SHOW_RUNNING_LABEL:          'SHOW_RUNNING_LABEL',
-  RUNNING_LABEL_POSITION:      'RUNNING_LABEL_POSITION'
+  RUNNING_LABEL_POSITION:      'RUNNING_LABEL_POSITION',
+
+  // Wine Sort
+  WINE_SORT_ORDER: 'WINE_SORT_ORDER'
 };
 
 // ============================================================================
@@ -440,7 +443,8 @@ function getWineEntryStyle(allProps, preset) {
     transform:  p[PROP_KEYS.WINE_TRANSFORM]            || pr.wineEntry.transform || 'none',
     variant:    p[PROP_KEYS.WINE_VARIANT]              || pr.wineEntry.variant   || 'normal',
     spaceAfter: storedSpaceAfter != null ? (parseFloat(storedSpaceAfter) || 0) : (pr.wineEntry.spaceAfter || 0),
-    showBin:    storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false)
+    showBin:    storedShowBin != null ? storedShowBin === 'true' : (pr.wineEntry.showBin || false),
+    sortOrder:  p[PROP_KEYS.WINE_SORT_ORDER] || 'alpha'
   };
 }
 
@@ -644,6 +648,114 @@ function saveWelcomeToggles(showTitlePage, showDate) {
   props[PROP_KEYS.SHOW_DATE]       = showDate.toString();
   PropertiesService.getDocumentProperties().setProperties(props);
   return { success: true, message: 'Title page settings saved.' };
+}
+
+// ============================================================================
+// Setter — Batch Save (all settings in one call)
+// ============================================================================
+
+/**
+ * Saves all dialog settings in a single setProperties() call.
+ * Called by the "Save All & Close" button in SettingsDialog.
+ *
+ * @param {Object} payload  All settings grouped by section.
+ * @returns {Object} { success, message }
+ */
+function saveAllSettings(payload) {
+  try {
+    var props = {};
+
+    // Page
+    if (payload.page) {
+      var pg = payload.page;
+      if (pg.sizePreset       !== undefined) props[PROP_KEYS.PAGE_SIZE_PRESET]   = pg.sizePreset;
+      if (pg.width            !== undefined) props[PROP_KEYS.PAGE_WIDTH]         = pg.width.toString();
+      if (pg.height           !== undefined) props[PROP_KEYS.PAGE_HEIGHT]        = pg.height.toString();
+      if (pg.marginTop        !== undefined) props[PROP_KEYS.PAGE_MARGIN_TOP]    = pg.marginTop.toString();
+      if (pg.marginBottom     !== undefined) props[PROP_KEYS.PAGE_MARGIN_BOTTOM] = pg.marginBottom.toString();
+      if (pg.marginInner      !== undefined) props[PROP_KEYS.PAGE_MARGIN_INNER]  = pg.marginInner.toString();
+      if (pg.marginOuter      !== undefined) props[PROP_KEYS.PAGE_MARGIN_OUTER]  = pg.marginOuter.toString();
+      if (pg.pageBuffer       !== undefined) props[PROP_KEYS.PAGE_BUFFER]        = pg.pageBuffer.toString();
+      if (pg.frontMatterPages !== undefined) props[PROP_KEYS.FRONT_MATTER_PAGES] = pg.frontMatterPages.toString();
+    }
+
+    // Heading Styles (Types 1–MAX_HEADING_TYPE)
+    if (payload.headings) {
+      for (var t = 1; t <= MAX_HEADING_TYPE; t++) {
+        var hs = payload.headings[t];
+        if (!hs) continue;
+        if (hs.title) {
+          Object.keys(hs.title).forEach(function(k) {
+            var v = hs.title[k];
+            if (v !== undefined && v !== null && v !== '') {
+              props[headingKey_(t, 'TITLE', k.toUpperCase())] = v.toString();
+            }
+          });
+        }
+        if (hs.subtext) {
+          Object.keys(hs.subtext).forEach(function(k) {
+            var v = hs.subtext[k];
+            if (v !== undefined && v !== null) {
+              props[headingKey_(t, 'SUB', k.toUpperCase())] = v.toString();
+            }
+          });
+        }
+      }
+    }
+
+    // Wine Entry
+    if (payload.wineEntry) {
+      var we = payload.wineEntry;
+      if (we.font       !== undefined) props[PROP_KEYS.WINE_FONT]        = we.font;
+      if (we.size       !== undefined) props[PROP_KEYS.WINE_SIZE]        = we.size.toString();
+      if (we.color      !== undefined) props[PROP_KEYS.WINE_COLOR]       = we.color;
+      if (we.weight     !== undefined) props[PROP_KEYS.WINE_WEIGHT]      = we.weight;
+      if (we.style      !== undefined) props[PROP_KEYS.WINE_STYLE]       = we.style;
+      if (we.spacing    !== undefined) props[PROP_KEYS.WINE_SPACING]     = we.spacing.toString();
+      if (we.transform  !== undefined) props[PROP_KEYS.WINE_TRANSFORM]   = we.transform;
+      if (we.variant    !== undefined) props[PROP_KEYS.WINE_VARIANT]     = we.variant;
+      if (we.spaceAfter !== undefined) props[PROP_KEYS.WINE_SPACE_AFTER] = we.spaceAfter.toString();
+      if (we.showBin    !== undefined) props[PROP_KEYS.WINE_SHOW_BIN]    = we.showBin.toString();
+      if (we.sortOrder  !== undefined) props[PROP_KEYS.WINE_SORT_ORDER]  = we.sortOrder;
+    }
+
+    // Colors
+    if (payload.colors) {
+      if (payload.colors.primary) props[PROP_KEYS.COLOR_PRIMARY] = payload.colors.primary;
+      if (payload.colors.text)    props[PROP_KEYS.COLOR_TEXT]    = payload.colors.text;
+    }
+
+    // Images
+    if (payload.images) {
+      if (payload.images.logo   !== undefined) props[PROP_KEYS.IMAGE_LOGO]   = payload.images.logo;
+      if (payload.images.footer !== undefined) props[PROP_KEYS.IMAGE_FOOTER] = payload.images.footer;
+    }
+
+    // Welcome / Title Page
+    if (payload.welcome) {
+      var wc = payload.welcome;
+      if (wc.showTitlePage !== undefined) props[PROP_KEYS.SHOW_TITLE_PAGE] = wc.showTitlePage.toString();
+      if (wc.showDate      !== undefined) props[PROP_KEYS.SHOW_DATE]       = wc.showDate.toString();
+      if (wc.line1         !== undefined) props[PROP_KEYS.WELCOME_LINE1]   = wc.line1;
+      if (wc.line2         !== undefined) props[PROP_KEYS.WELCOME_LINE2]   = wc.line2;
+      if (wc.line3         !== undefined) props[PROP_KEYS.WELCOME_LINE3]   = wc.line3;
+    }
+
+    // Footer
+    if (payload.footer) {
+      var ft = payload.footer;
+      if (ft.pageNumberPosition   !== undefined) props[PROP_KEYS.FOOTER_PAGE_NUMBER_POSITION] = ft.pageNumberPosition;
+      if (ft.footerRule           !== undefined) props[PROP_KEYS.FOOTER_RULE]                 = ft.footerRule;
+      if (ft.showRunningLabel     !== undefined) props[PROP_KEYS.SHOW_RUNNING_LABEL]          = ft.showRunningLabel.toString();
+      if (ft.runningLabelPosition !== undefined) props[PROP_KEYS.RUNNING_LABEL_POSITION]      = ft.runningLabelPosition;
+      if (ft.footerImage          !== undefined) props[PROP_KEYS.IMAGE_FOOTER]                = ft.footerImage || '';
+    }
+
+    PropertiesService.getDocumentProperties().setProperties(props);
+    return { success: true, message: 'All settings saved.' };
+  } catch (e) {
+    return { success: false, message: 'Error saving settings: ' + e.toString() };
+  }
 }
 
 // ============================================================================
