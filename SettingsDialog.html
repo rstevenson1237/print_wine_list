@@ -199,7 +199,6 @@
       <label>Front Matter Pages</label><input type="number" id="front-matter-pages" min="0" max="10" step="1">
     </div>
     <div class="help-text">Number of pages before content starts (title + TOC). Affects page numbering offset.</div>
-    <div style="margin-top:12px"><button class="btn btn-primary" onclick="savePageLayout()">Save Page Layout</button></div>
   </div>
 
   <!-- ======== HEADINGS TAB ======== -->
@@ -263,9 +262,17 @@
       <label for="wine-show-bin">Show bin number to the left of each wine entry (from "Bin" column)</label>
     </div>
     <div class="help-text">Displays the bin code left-aligned before the wine name. Values longer than 10 characters are truncated. Only visible when a variable-weight or appropriately styled font is in use.</div>
+    <h3>Sort Order</h3>
+    <div class="row">
+      <label>Within Section</label>
+      <select id="wine-sort-order">
+        <option value="alpha">Alphabetical (A–Z)</option>
+        <option value="price">Price (Lowest to Highest)</option>
+      </select>
+    </div>
+    <div class="help-text">Controls the order wines appear within each section of the printed list.</div>
     <div class="font-preview-label">Preview</div>
     <div class="font-preview" id="wine-preview">Domaine de la Romanée-Conti, Burgundy — 245</div>
-    <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveWineEntry()">Save Wine Entry Style</button></div>
   </div>
 
   <!-- ======== BRAND TAB ======== -->
@@ -275,13 +282,11 @@
       <label>Primary</label>
       <input type="color" id="color-primary-pick" onchange="syncColor('primary')">
       <input type="text"  id="color-primary-hex" class="hex" maxlength="7" onchange="syncColorFromHex('primary')">
-      <button class="btn btn-sm btn-primary" onclick="saveColorSetting('primary')">Save</button>
     </div>
     <div class="row">
       <label>Text</label>
       <input type="color" id="color-text-pick" onchange="syncColor('text')">
       <input type="text"  id="color-text-hex" class="hex" maxlength="7" onchange="syncColorFromHex('text')">
-      <button class="btn btn-sm btn-primary" onclick="saveColorSetting('text')">Save</button>
     </div>
 
     <h3>Images</h3>
@@ -291,7 +296,6 @@
       <div class="image-assign-row">
         <label>Logo</label>
         <select id="img-logo-select" onchange="previewImage('logo')"></select>
-        <button class="btn btn-sm btn-primary" onclick="saveImageAssignmentUI('logo')">Save</button>
       </div>
       <div class="img-thumb-wrap" id="img-logo-thumb-wrap">
         <span class="no-thumb">No preview</span>
@@ -302,7 +306,6 @@
       <div class="image-assign-row">
         <label>Footer</label>
         <select id="img-footer-select" onchange="previewImage('footer')"></select>
-        <button class="btn btn-sm btn-primary" onclick="saveImageAssignmentUI('footer')">Save</button>
       </div>
       <div class="img-thumb-wrap" id="img-footer-thumb-wrap">
         <span class="no-thumb">No preview</span>
@@ -321,8 +324,6 @@
       <input type="checkbox" id="show-date">
       <label for="show-date">Show auto-generated date</label>
     </div>
-    <div style="margin-top:6px"><button class="btn btn-sm btn-primary" onclick="saveWelcomeToggles()">Save Toggles</button></div>
-
     <h3>Welcome Text</h3>
     <div class="help-text">Leave blank for a logo-only title page. Line 1 uses the Type 1 heading font and brand color.</div>
     <h4>Line 1 (headline)</h4>
@@ -331,7 +332,6 @@
     <textarea id="welcome-line2"></textarea>
     <h4>Line 3</h4>
     <textarea id="welcome-line3"></textarea>
-    <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveWelcome()">Save Welcome Text</button></div>
   </div>
 
   <!-- ======== FOOTER TAB ======== -->
@@ -383,7 +383,6 @@
       </select>
     </div>
     <div class="help-text">The label shows the current top-level section name (e.g., "SPARKLING", "RED") and alternates left/right for spread printing.</div>
-    <div style="margin-top:10px"><button class="btn btn-primary" onclick="saveFooter()">Save Footer Settings</button></div>
   </div>
 
   <!-- ======== ASSETS TAB ======== -->
@@ -412,8 +411,9 @@
   </div>
 
   <hr style="margin-top:20px">
-  <div style="text-align:right; margin-top:8px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
     <button class="btn btn-danger" onclick="resetAll()">Reset All to Brand Defaults</button>
+    <button id="save-all-btn" class="btn btn-primary" onclick="saveAllAndClose()">Save All &amp; Close</button>
   </div>
 
 <script>
@@ -709,10 +709,7 @@
           buildSubtextRow(t, s.subtext) +
         '</div>' +
         '<div class="font-preview-label">Title preview</div>' +
-        '<div class="font-preview" id="preview-t' + t + '">Champagne &amp; Sparkling — France</div>' +
-        '<div style="margin-top:8px;text-align:right">' +
-          '<button class="btn btn-sm btn-primary" onclick="saveHeading(' + t + ')">Save Type ' + t + '</button>' +
-        '</div>';
+        '<div class="font-preview" id="preview-t' + t + '">Champagne &amp; Sparkling — France</div>';
       container.appendChild(panel);
     }
   }
@@ -840,6 +837,7 @@
     document.getElementById('wine-spacing').value     = we.spacing     || 0;
     document.getElementById('wine-space-after').value = we.spaceAfter  || 0;
     document.getElementById('wine-show-bin').checked  = !!we.showBin;
+    document.getElementById('wine-sort-order').value  = we.sortOrder   || 'alpha';
   }
 
   function saveWineEntry() {
@@ -1207,6 +1205,111 @@
         return '<option value="' + f + '"' + (f === current ? ' selected' : '') + '>' + f + '</option>';
       }).join('');
     });
+  }
+
+  // ============================================================================
+  // Save All & Close
+  // ============================================================================
+
+  function collectAllSettings() {
+    var headings = {};
+    for (var t = 1; t <= 4; t++) {
+      var pre   = 'hs-' + t + '-';
+      var sbRaw = document.getElementById(pre + 'title-spacebefore').value.trim();
+      var saRaw = document.getElementById(pre + 'title-spaceafter').value.trim();
+      var title = {
+        font:      val(pre + 'title-font'),
+        size:      val(pre + 'title-size'),
+        color:     val(pre + 'title-color'),
+        align:     val(pre + 'title-align'),
+        weight:    val(pre + 'title-weight'),
+        transform: val(pre + 'title-transform'),
+        spacing:   val(pre + 'title-spacing'),
+        underline: val(pre + 'title-underline'),
+        variant:   val(pre + 'title-variant')
+      };
+      if (sbRaw !== '') title.spaceBefore = sbRaw;
+      if (saRaw !== '') title.spaceAfter  = saRaw;
+      headings[t] = {
+        title: title,
+        subtext: {
+          font:     val(pre + 'sub-font'),
+          size:     val(pre + 'sub-size'),
+          color:    val(pre + 'sub-color'),
+          weight:   val(pre + 'sub-weight'),
+          position: val(pre + 'sub-position')
+        }
+      };
+    }
+
+    return {
+      page: {
+        sizePreset:       val('page-size-preset'),
+        width:            parseFloat(val('page-width'))         || 0,
+        height:           parseFloat(val('page-height'))        || 0,
+        marginTop:        parseFloat(val('page-margin-top'))    || 0,
+        marginBottom:     parseFloat(val('page-margin-bottom')) || 0,
+        marginInner:      parseFloat(val('page-margin-inner'))  || 0,
+        marginOuter:      parseFloat(val('page-margin-outer'))  || 0,
+        pageBuffer:       parseInt(val('page-buffer'))          || 0,
+        frontMatterPages: parseInt(val('front-matter-pages'))   || 0
+      },
+      headings: headings,
+      wineEntry: {
+        font:       val('wine-font'),
+        size:       parseFloat(val('wine-size'))        || 0,
+        color:      val('wine-color-hex'),
+        weight:     val('wine-weight'),
+        style:      val('wine-style'),
+        transform:  val('wine-transform'),
+        variant:    val('wine-variant'),
+        spacing:    parseFloat(val('wine-spacing'))     || 0,
+        spaceAfter: parseFloat(val('wine-space-after')) || 0,
+        showBin:    document.getElementById('wine-show-bin').checked,
+        sortOrder:  val('wine-sort-order')
+      },
+      colors: {
+        primary: val('color-primary-hex'),
+        text:    val('color-text-hex')
+      },
+      images: {
+        logo:   val('img-logo-select'),
+        footer: val('img-footer-select') || ''
+      },
+      welcome: {
+        showTitlePage: document.getElementById('show-title-page').checked,
+        showDate:      document.getElementById('show-date').checked,
+        line1:         document.getElementById('welcome-line1').value,
+        line2:         document.getElementById('welcome-line2').value,
+        line3:         document.getElementById('welcome-line3').value
+      },
+      footer: {
+        pageNumberPosition:   val('footer-page-number-position'),
+        footerRule:           val('footer-rule'),
+        showRunningLabel:     document.getElementById('show-running-label').checked,
+        runningLabelPosition: val('running-label-position'),
+        footerImage:          val('footer-image-select') || ''
+      }
+    };
+  }
+
+  function saveAllAndClose() {
+    var saveBtn = document.getElementById('save-all-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+    google.script.run
+      .withSuccessHandler(function(r) {
+        if (r.success) {
+          google.script.host.close();
+        } else {
+          showStatus('error', r.message);
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save All & Close'; }
+        }
+      })
+      .withFailureHandler(function(e) {
+        showStatus('error', e.message);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save All & Close'; }
+      })
+      .saveAllSettings(collectAllSettings());
   }
 
   // ============================================================================

@@ -46,7 +46,8 @@ function prepareWineListData() {
     SpreadsheetApp.getUi().alert('No wine data found or missing required columns in the List sheet.');
     return null;
   }
-  const wineMap = buildWineMap(wineData);
+  const sortOrder = PropertiesService.getDocumentProperties().getProperty('WINE_SORT_ORDER') || 'alpha';
+  const wineMap = buildWineMap(wineData, sortOrder);
 
   // Step 3: Validate — find orphaned wines
   const sectionCodes = new Set(sections.filter(function(s) { return s.code > 0; }).map(function(s) { return s.code; }));
@@ -259,12 +260,14 @@ function getWineData(sheet) {
 
 /**
  * Groups wines by their section code into a Map.
- * Wines within each group are sorted alphabetically by name.
+ * Wines within each group are sorted alphabetically by name or by price
+ * depending on the sortOrder setting.
  *
- * @param {Array<Object>} wineData Array of wine objects from getWineData.
+ * @param {Array<Object>} wineData  Array of wine objects from getWineData.
+ * @param {string}        sortOrder 'alpha' (default) or 'price'.
  * @returns {Map<number, Array<Object>>} Map of sectionCode → sorted wine array.
  */
-function buildWineMap(wineData) {
+function buildWineMap(wineData, sortOrder) {
   var map = new Map();
 
   wineData.forEach(function(wine) {
@@ -275,9 +278,12 @@ function buildWineMap(wineData) {
     map.get(code).push(wine);
   });
 
-  // Sort each group alphabetically by name
   map.forEach(function(wines) {
-    wines.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    if (sortOrder === 'price') {
+      wines.sort(function(a, b) { return a.price - b.price; });
+    } else {
+      wines.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    }
   });
 
   return map;
