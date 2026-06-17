@@ -32,6 +32,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
 
   var currentHeight = 0;
   var currentPage   = 1;
+  var currentPageHasWines = false;
 
   var pageBreaks     = new Set();
   var winePageBreaks = new Map();
@@ -55,6 +56,7 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
       pageBreaks.add(s);
       currentPage++;
       currentHeight = runningLabelHeight;
+      currentPageHasWines = false;
     }
 
     // Rule 2: Does the section fit?
@@ -72,23 +74,34 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
           pageBreaks.add(s);
           currentPage++;
           currentHeight = runningLabelHeight;
+          currentPageHasWines = false;
         }
       }
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
+      if (wines.length > 0) currentPageHasWines = true;
 
     } else if (currentHeight > 0 && fitsOnEmptyPage) {
       pageBreaks.add(s);
       currentPage++;
       currentHeight = runningLabelHeight;
+      currentPageHasWines = false;
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
       currentHeight += totalHeight;
+      if (wines.length > 0) currentPageHasWines = true;
 
     } else {
-      if (currentHeight > 0) {
+      // Section doesn't fit on the current page and doesn't fit on an empty page.
+      // Only break to a new page if wine entries have already been placed here.
+      // If the current page is headers-only, keep the headers and start splitting
+      // wines right from the current position (accounting for the space they occupy).
+      var heightBeforeSplit = currentHeight;
+      if (currentPageHasWines) {
         pageBreaks.add(s);
         currentPage++;
         currentHeight = runningLabelHeight;
+        currentPageHasWines = false;
+        heightBeforeSplit = runningLabelHeight;
       }
 
       recordTOCEntry_(section, currentPage + frontMatterOffset, tocPageNumbers, s);
@@ -97,11 +110,12 @@ function calculatePagination(sections, wineMap, headingStyles, pageConfig, wineE
         currentHeight += headingHeight;
       } else {
         var splitResult = splitOversizedSection_(
-          headingHeight, wines.length, usableHeight, currentPage, wineEntryHeight, runningLabelHeight
+          headingHeight, wines.length, usableHeight, currentPage, wineEntryHeight, runningLabelHeight, heightBeforeSplit
         );
         winePageBreaks.set(s, splitResult.breaks);
         currentPage   = splitResult.endPage;
         currentHeight = splitResult.endHeight;
+        currentPageHasWines = true;
       }
     }
   }
@@ -221,10 +235,12 @@ function peekMinFollowingHeight_(startIdx, sections, wineMap, headingStyles, cac
   return total;
 }
 
-function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight, runningLabelHeight) {
+function splitOversizedSection_(headingHeight, wineCount, usableHeight, startPage, wineEntryHeight, runningLabelHeight, existingPageHeight) {
   var breaks = new Set();
   var currentPage = startPage;
-  var currentHeight = headingHeight;
+  // existingPageHeight is the height already consumed on startPage (e.g. headers placed before
+  // this oversized section). When breaking fresh, this equals runningLabelHeight.
+  var currentHeight = (existingPageHeight !== undefined ? existingPageHeight : 0) + headingHeight;
   var winesOnCurrentPage = 0;
   var minWines = ELEMENT_HEIGHTS.MIN_WINES_PER_SPLIT;
   var labelHeight = runningLabelHeight || 0;
