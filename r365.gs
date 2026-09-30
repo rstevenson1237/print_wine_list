@@ -10,6 +10,8 @@
  *   R365_USER          — R365 username / account
  *   R365_FILTER        — Location filter value (GUID or encoded name)
  *   R365_ITEM_CATEGORY — ItemCategory1v2 GUID for wine items
+ *   R365_HOST          — Report server host (set from the .atomsvc import; R365
+ *                        moves this periodically and retired hosts return 410)
  */
 
 // ============================================================================
@@ -19,8 +21,12 @@
 const R365_DOC_PROPS = {
   USER:          'R365_USER',
   FILTER:        'R365_FILTER',
-  ITEM_CATEGORY: 'R365_ITEM_CATEGORY'
+  ITEM_CATEGORY: 'R365_ITEM_CATEGORY',
+  HOST:          'R365_HOST'
 };
+
+/** Report server host used when none has been imported from an .atomsvc file. */
+const R365_DEFAULT_HOST = 'r365prodrep012.restaurant365.com';
 
 // ============================================================================
 // Config Getters / Setters (called from FeedConfigDialog)
@@ -44,6 +50,7 @@ function getR365Config() {
     user,
     filter,
     itemCategory,
+    host: p.getProperty(R365_DOC_PROPS.HOST) || R365_DEFAULT_HOST,
     hasConfig: !!(user && filter && itemCategory)
   };
 }
@@ -81,7 +88,7 @@ function saveR365Param(key, value) {
 function getR365UrlPreview() {
   const config = getR365Config();
   if (!config.hasConfig) return '';
-  return buildR365UrlTemplate_(config.user, config.filter, config.itemCategory);
+  return buildR365UrlTemplate_(config.user, config.filter, config.itemCategory, config.host);
 }
 
 // ============================================================================
@@ -96,18 +103,21 @@ function getR365UrlPreview() {
  * @param {string} user         R365 User param value.
  * @param {string} filter       R365 Filter param value.
  * @param {string} itemCategory R365 ItemCategory1v2 param value.
+ * @param {string=} host        Report server host (defaults to R365_DEFAULT_HOST).
  * @returns {string} Full URL template.
  * @private
  */
-function buildR365UrlTemplate_(user, filter, itemCategory) {
+function buildR365UrlTemplate_(user, filter, itemCategory, host) {
+  const tzCode   = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'z');
+  const tzOffset = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'Z').substring(0, 3);
   return (
-    'https://na02reports.restaurant365.com/ReportServer' +
+    'https://' + (host || R365_DEFAULT_HOST) + '/ReportServer' +
     '?%2FNA02%2FReceiving%20by%20Purchased%20Item' +
     '&Database=atlasrestaurantgroup' +
     '&User=' + user +
     '&SQLServer=pro-sqlag-571.restaurant365.com' +
-    '&TimeZoneCode=EST' +
-    '&UtcOffset=-05' +
+    '&TimeZoneCode=' + tzCode +
+    '&UtcOffset=' + tzOffset +
     '&FilterBy=Location' +
     '&Filter=' + filter +
     '&Start=__START_DATE__' +
@@ -187,7 +197,7 @@ function fetchR365Data(startDate, endDate) {
     );
   }
 
-  const urlTemplate = buildR365UrlTemplate_(config.user, config.filter, config.itemCategory);
+  const urlTemplate = buildR365UrlTemplate_(config.user, config.filter, config.itemCategory, config.host);
 
   const startDateTime = startDate + ' 00:00:00';
   const endDateTime   = endDate   + ' 00:00:00';
@@ -514,11 +524,14 @@ function processUploadedFeed(xmlContent) {
     const params = extractSpecificParams(uploadedHref);
 
     // Save to DocumentProperties
-    PropertiesService.getDocumentProperties().setProperties({
+    const toSave = {
       [R365_DOC_PROPS.USER]:          params.user,
       [R365_DOC_PROPS.FILTER]:        params.filter,
       [R365_DOC_PROPS.ITEM_CATEGORY]: params.itemCategory1v2
-    });
+    };
+    const hostMatch = uploadedHref.match(/^https?:\/\/([^\/?#]+)/i);
+    if (hostMatch) toSave[R365_DOC_PROPS.HOST] = hostMatch[1];
+    PropertiesService.getDocumentProperties().setProperties(toSave);
 
     Logger.log('R365 params saved from .atomsvc — User: ' + params.user +
                ', Filter: ' + params.filter +
