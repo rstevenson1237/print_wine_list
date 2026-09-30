@@ -118,6 +118,7 @@ function buildR365UrlTemplate_(user, filter, itemCategory, host) {
     '&SQLServer=pro-sqlag-571.restaurant365.com' +
     '&TimeZoneCode=' + tzCode +
     '&UtcOffset=' + tzOffset +
+    '&Domain=restaurant365.com' +
     '&FilterBy=Location' +
     '&Filter=' + filter +
     '&Start=__START_DATE__' +
@@ -213,8 +214,12 @@ function fetchR365Data(startDate, endDate) {
 
   if (responseCode !== 200) {
     const errorBody = response.getContentText();
-    Logger.log('R365 error (' + responseCode + '): ' + errorBody);
-    throw new Error('Failed to fetch data. Server responded with code: ' + responseCode);
+    const headers  = response.getHeaders();
+    const authHint = headers['WWW-Authenticate'] || headers['Www-Authenticate'] || '';
+    Logger.log('R365 error (' + responseCode + ') host=' + config.host +
+               (authHint ? ' WWW-Authenticate=' + authHint : '') + ': ' + errorBody.substring(0, 500));
+    throw new Error('Failed to fetch data. Server responded with code: ' + responseCode +
+                    (authHint ? ' (WWW-Authenticate: ' + authHint + ')' : ''));
   }
 
   const csvContent = response.getContentText();
